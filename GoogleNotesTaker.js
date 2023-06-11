@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google Docs Note Taker
 // @namespace    http://LokiAstari.com/
-// @version      0.7
+// @version      0.9
 // @description  Link a private google doc to any web page. Link multiple pages to a single note.
 // @author       Loki Astari
 // @match        https://docs.google.com/document/*
@@ -42,6 +42,99 @@
  *
  * */
 (function() {
+    // To get a StorageInterface call
+    // Storage.sessionStart(action)
+    //    Action => function(StorageInterface)
+    //        Action is a callback that is passed a storage interface as its parameter.
+    //        Returning null/undefined/false => results in nothing else happening.
+    //        Returning true: forces any changes made to be persisted.
+    //        Returning an array:
+    //            if the first element is "true" save any changes.
+    //            return the second value as a result from Storage.sessionStart().
+    //
+    // This was done because I wanted to note serialize/deserialize the data from
+    // "localStorage" every time I accessed any persisted data but did want to make
+    // sure that I did not accidently forget to put any changes back.
+    class StorageInterface {
+        constructor(storeObject) {
+            this.pages = storeObject.pages;
+            this.notes = storeObject.notes;
+        };
+        // Public
+        static GDNTStorageNoteDefaultDisplay = '* Note Waiting For Title *';
+
+        // Public
+        getPageNotes(page) {
+            if (!this.pages.hasOwnProperty(page)) {
+                // This is the main object that can be interacted with externally.
+                // The other interface usually return this.
+                this.pages[page] = {note: ''};
+            }
+            return this.pages[page];
+        };
+
+        // Public
+        delPageNote(page) {
+            delete this.pages[page];
+        };
+
+        // Public
+        getNotesInfo(note) {
+            var find = this.notes.filter(obj => obj.note == note);
+            if (find.length == 0) {
+                // This is the main object that can be interacted with externally.
+                // The other interface usually return this.
+                this.notes.push({note: note, display: StorageInterface.GDNTStorageNoteDefaultDisplay, linkedPages: []});
+                find = this.notes.filter(obj => obj.note == note);
+            }
+            return find[0];
+        };
+
+        // Public
+        findNoteInfo(note) {
+            var find = this.notes.filter(obj => obj.note == note);
+            return find.length == 0 ? {note: '', display:'', linkedPages: []} : find[0];
+        };
+
+        // Public
+        delNoteInfo(note) {
+            this.notes = this.notes.filter(obj => obj.note != note);
+        };
+
+        // Public
+        setPageNotesData(page, note) {
+            const pageData = this.getPageNotes(page);
+            if (pageData.note) {
+                const notesDate = this.getNotesInfo(pageData.note);
+                notesDate.linkedPages = notesDate.linkedPages.filter(obj => obj.page != page);
+            }
+            if (note) {
+                pageData.note = note;
+                const notesData = this.getNotesInfo(pageData.note);
+                const filterPages = notesData.linkedPages.filter(obj => obj.page == page);
+                if (filterPages.length == 0) {
+                    notesData.linkedPages.push({page: page, display: cleanTitle(document.title)});
+                }
+            }
+            else {
+                this.delPageNote(page);
+            }
+        };
+        // Public
+        getNoteData(page) {
+            const pageData = this.getPageNotes(page);
+            return pageData.note == '' ? {display:'', linkedPages:[]} : this.getNotesInfo(pageData.note);
+        };
+        // Public
+        getPageData(page) {
+            return this.getPageNotes(page);
+        };
+        // Public
+        getListAllNotes() {
+            return this.notes;
+        };
+    };
+
     const cleanUrl = function(url) {
         return url.split('?')[0].split('#')[0];
     }
@@ -50,11 +143,13 @@
     }
     const currentPage = cleanUrl(window.location.href);
 
+    // The main access to the persisted state.
+    // Any user action should only call one method on "Storage"
+    // If you need to make multiple calls then sessionStart() see above
+    // You can perform multiple actions on the storage state before returning.
     const Storage = {
         // Private
         GDNTStorageName: 'GDNTPageData',
-        GDNTStoragePageDefaultDisplay: '*Page*',
-        GDNTStorageNoteDefaultDisplay: '* Note Waiting For Title *',
         // Private
         getGDNTData: function() {
             const GDNTStorageText = localStorage.getItem(this.GDNTStorageName);
@@ -64,110 +159,7 @@
         setGDNTData: function(newValue) {
             localStorage.setItem(this.GDNTStorageName, JSON.stringify(newValue));
         },
-        // Private
-        getPageNotes: function(session, page) {
-            if (!session.pages.hasOwnProperty(page)) {
-                // This is the main object that can be interacted with externally.
-                // The other interface usually return this.
-                session.pages[page] = {note: ''};
-            }
-            return session.pages[page];
-        },
-        // Private
-        delPageNote: function(session, page) {
-            delete session.pages[page];
-        },
-        // Private
-        getNotesInfo: function(session, note) {
-            var find = session.notes.filter(obj => obj.page == note);
-            if (find.length == 0) {
-                // This is the main object that can be interacted with externally.
-                // The other interface usually return this.
-                session.notes.push({page: note, display: this.GDNTStorageNoteDefaultDisplay, linkedPages: []});
-                find = session.notes.filter(obj => obj.page == note);
-            }
-            return find[0];
-        },
-        // Private
-        delNoteInfo: function(session, note) {
-            session.notes = session.notes.filter(obj => obj.page != note);
-        },
-        // Private
-        setPageNotesData: function(session, page, note) {
-            const pageData = this.getPageNotes(session, page);
-            if (pageData.note) {
-                const notesDate = this.getNotesInfo(session, pageData.note);
-                notesDate.linkedPages = notesDate.linkedPages.filter(obj => obj.page != page);
-            }
-            if (note) {
-                pageData.note = note;
-                const notesData = this.getNotesInfo(session, pageData.note);
-                const filterPages = notesData.linkedPages.filter(obj => obj.page == page);
-                if (filterPages.length == 0) {
-                    notesData.linkedPages.push({page: page, display: cleanTitle(document.title)});
-                }
-            }
-            else {
-                this.delPageNote(session, page);
-            }
-        },
-        // public
-        // Uses session
-        fixSavedData: function(note, title) {
-            this.sessionStart((session) => {
-                const notesPage = this.getNotesInfo(session, note);
-                if (notesPage.display != this.GDNTStorageNoteDefaultDisplay) {
-                    return false;
-                }
-                notesPage.display = title;
-                return true;
-            });
-        },
-        // Public
-        // Uses session
-        setPageNotes: function(page, notes) {
-            this.sessionStart((session) => {
-                this.setPageNotesData(session, page, notes);
-                return true;
-            });
-        },
-        // Public
-        // Uses session
-        getPageNoteInfo: function(page) {
-            return this.sessionStart((session) => {
-                const pageData = this.getPageNotes(session, page);
-                return [false, pageData.note];
-            });
-        },
-        // Public
-        // Uses session
-        delNote: function(note) {
-            this.sessionStart((session) => {
-                const noteData = this.getNotesInfo(session, note);
-                for (const page of noteData.linkedPages) {
-                    this.delPageNote(session, page);
-                }
 
-                this.delNoteInfo(session, note);
-                return true;
-            });
-        },
-        // Public
-        // Needs session
-        getListAllNotes: function(session) {
-            return session.notes;
-        },
-        // Public
-        // Needs session
-        getNoteData: function(session, page) {
-            const pageData = this.getPageNotes(session, page);
-            return pageData.note == '' ? {display:'', linkedPages:[]} : this.getNotesInfo(session, pageData.note);
-        },
-        // Public
-        // Needs session
-        getPageData: function(session, page) {
-            return this.getPageNotes(session, page);
-        },
         // Private: Internally used by sessionStart
         seaasionInUse: false,
         // Public
@@ -179,18 +171,18 @@
                 // TODO:
             }
             this.seaasionInUse = true;
-            const session = this.getGDNTData();
+            const session = new StorageInterface(this.getGDNTData());
             const result = action(session);
             if (result === undefined || result === null || result === false) {
                 return;
             }
             if (result === true) {
-                this.setGDNTData(session);
+                this.setGDNTData({pages: session.pages, notes: session.notes});
                 return;
             }
             if (result.constructor === Array) {
                 if (result.length > 0 && result[0] === true) {
-                    this.setGDNTData(session);
+                    this.setGDNTData({pages: session.pages, notes: session.notes});
                 }
                 if (result.length > 1) {
                     return result[1];
@@ -198,7 +190,56 @@
             }
             return;
         },
+        // public
+        // Uses session
+        fixSavedData: function(note, title) {
+            this.sessionStart((session) => {
+                const notesPage = session.getNotesInfo(note);
+                if (notesPage.display != StorageInterface.GDNTStorageNoteDefaultDisplay) {
+                    return false;
+                }
+                notesPage.display = title;
+                return true;
+            });
+        },
+        // Public
+        // Uses session
+        setPageNotes: function(page, notes) {
+            this.sessionStart((session) => {
+                session.setPageNotesData(page, notes);
+                return true;
+            });
+        },
+        // Public
+        // Uses session
+        getPageNoteInfo: function(page) {
+            return this.sessionStart((session) => {
+                const pageData = session.getPageNotes(page);
+                return [false, pageData.note];
+            });
+        },
+        // Public
+        // Uses session
+        delNote: function(note) {
+            this.sessionStart((session) => {
+                console.log("Delete Note >" + note + "<");
+                const noteData = session.getNotesInfo(note);
+                for (const page of noteData.linkedPages) {
+                    console.log("Delete Page: >" + page.page + "<");
+                    session.delPageNote(page.page);
+                }
+
+                session.delNoteInfo(note);
+                console.log("Session: " + JSON.stringify(session));
+                return true;
+            });
+        },
     };
+
+    // All user interactions (event handlers) are here.
+    // Each event handler should only call one method on "Storage"
+    // otherwise you are serializing and de-serializing the persisted
+    // state on each call.
     const UI = {
         // Private
         saveNotePage: function(note) {
@@ -294,19 +335,20 @@ Are you sure?`);
                 }
             `);
             const storageData = Storage.sessionStart((session) => {
-                const pageData = Storage.getPageData(session, page);
-                const noteData = Storage.getNoteData(session, page);
-                const notesList = Storage.getListAllNotes(session);
-                return [false, {pageData: pageData, noteData: noteData, notesList: notesList}];
+                const pageData = session.getPageData(page);
+                const pageNote = session.findNoteInfo(page);
+                const noteData = session.getNoteData(page);
+                const notesList = session.getListAllNotes();
+                return [false, {pageData: pageData, pageNote: pageNote, noteData: noteData, notesList: notesList}];
             });
 
             const hasNote = storageData.pageData.note != '';
             console.log(`
                 pageData:            ${JSON.stringify(storageData.pageData)}
-                pageData.isNote:     {storageData.pageData.linkedPages.length ? true : false}
+                pageNote.isNote:     ${storageData.pageNote.linkedPages.length ? true : false}
                 pagesOnNoteList:     ${storageData.noteData.linkedPages.length}
                 notesList:           ${storageData.notesList.length}
-                pageData.linkedPages:{storageData.pageData.linkedPages.length}
+                pageNote.linkedPages:${storageData.pageNote.linkedPages.length}
                 noteData.likkedPages:${storageData.noteData.linkedPages.length}
                 hasNote:             ${hasNote}
             `);
@@ -321,7 +363,7 @@ Are you sure?`);
             const blockText_P2 = `
                     </ul>
                 </div>
-                <div class="GDNTContainer"  style="display:${/*storageData.pageData.linkedPages.length*/false ? 'block' : 'none'}">
+                <div class="GDNTContainer"  style="display:${storageData.pageNote.linkedPages.length ? 'block' : 'none'}">
                     <div>This is the Notes Page for:</div>
                     <ul>`;
             const blockText_P3 = `
@@ -336,14 +378,12 @@ Are you sure?`);
             const deleteIcon = 'https://icons.iconarchive.com/icons/paomedia/small-n-flat/16/sign-error-icon.png';
             var list1 = '';
             for (const linkPage of storageData.notesList) {
-                list1 += `<li><img class="DeleteNote" value="${linkPage.page}" src="${deleteIcon}"/><a class="NotesPage" value="${linkPage.page}">${linkPage.display}</a></li>`;
+                list1 += `<li><img class="DeleteNote" value="${linkPage.note}" src="${deleteIcon}"/><a class="NotesPage" value="${linkPage.note}">${linkPage.display}</a></li>`;
             }
             var list2 = '';
-            /*
-            for (const linkPage of storageData.pageData.linkedPages) {
+            for (const linkPage of storageData.pageNote.linkedPages) {
                 list2 += `<li><img class="DeletePageNote" value="${linkPage.page}" src="${deleteIcon}"/><a href="${linkPage.page}">${linkPage.display}</a></li>`;
             }
-            */
             var list3 = '';
             for (const linkPage of storageData.noteData.linkedPages) {
                 list3 += `<li><img class="DeletePageNote" value="${linkPage.page}" src="${deleteIcon}"/><a href="${linkPage.page}">${linkPage.display}</a></li>`;
