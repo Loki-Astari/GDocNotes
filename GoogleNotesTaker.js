@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google Docs Note Taker
 // @namespace    http://LokiAstari.com/
-// @version      0.13
+// @version      0.14
 // @description  Link a private google doc to any web page. Link multiple pages to a single note.
 // @author       Loki Astari
 // @match        https://docs.google.com/document/*
@@ -378,7 +378,7 @@
         // Private
         addNotes: function(notes) {
             notes = this.getNotePage(notes);
-            this.addUI(currentPage);
+            this.addUI();
         },
         // Event Handler
         delPageNoteClick: function(event, page) {
@@ -399,7 +399,7 @@ Are you sure?`);
             }
 
             if (dirty) {
-                this.addUI(currentPage);
+                this.addUI();
             }
         },
         // Event Handler
@@ -413,10 +413,12 @@ Are you sure?`);
         },
         // Event Handler
         refreshNotesClick: function(event) {
-            this.addUI(currentPage);
+            this.addUI();
         },
         // Init and refresh the UI.
+        currentPage: null,
         mouseOverDeletable: null,
+        pageDirty: false,
         getOrCreateRoot: function() {
 
             const findBlock = document.getElementById('GDNTNotesContainer');
@@ -526,12 +528,12 @@ Are you sure?`);
                 //console.log('->Leave Remove');
             }
         },
-        addUI: function(page)
+        addUI: function()
         {
             const storageData = Storage.sessionStart((session) => {
-                const pageData = session.getPageData(page);
-                const pageNote = session.findNoteInfo(page);
-                const noteData = session.getNoteData(page);
+                const pageData = session.getPageData(this.currentPage);
+                const pageNote = session.findNoteInfo(this.currentPage);
+                const noteData = session.getNoteData(this.currentPage);
                 const notesList = session.getListAllNotes();
                 return [false, {hasNote: pageData.note != '', pageData: pageData, pageNote: pageNote, noteData: noteData, notesList: notesList}];
             });
@@ -570,6 +572,28 @@ Are you sure?`);
             // Note: This function is called after these elements are loaded (see waitForKeyElements below)
             document.getElementById('GDNTNotesRefrButton').addEventListener('click', (event) => {UI.refreshNotesClick(event);});
 */
+        },
+        createUI: function(page) {
+            this.currentPage = page;
+            this.addUI();
+            window.addEventListener("storage", (event) => {
+                if (event.key == Storage.GDNTStorageName) {
+                    if (document.visibilityState != "visible") {
+                        UI.pageDirty = true;
+                    }
+                    else {
+                        UI.addUI();
+                    }
+                }
+            });
+            document.addEventListener("visibilitychange", (event) => {
+                if (document.visibilityState == "visible") {
+                    console.log("tab is active");
+                    if (UI.pageDirty) {
+                        UI.addUI();
+                    }
+                }
+            });
         }
     };
     const resetItem = false;
@@ -600,7 +624,6 @@ Are you sure?`);
         }
     `);
 
-    waitForKeyElements('div.left-sidebar-container div.navigation-widget-smart-summary-container', () => {UI.addUI(currentPage);});
+    waitForKeyElements('div.left-sidebar-container div.navigation-widget-smart-summary-container', () => {UI.createUI(currentPage);});
 })();
-
 
