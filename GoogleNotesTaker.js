@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google Docs Note Taker
 // @namespace    http://LokiAstari.com/
-// @version      0.12
+// @version      0.13
 // @description  Link a private google doc to any web page. Link multiple pages to a single note.
 // @author       Loki Astari
 // @match        https://docs.google.com/document/*
@@ -237,7 +237,13 @@
     };
 
     const UIBuilder = {
-        buildListElements: function(list, cl, tt, extraStyle) {
+        buildListElementAnchor: function(cl, linkPage, link) {
+            if (cl == 'gdnt-note') {
+                return linkPage.display;
+            }
+            return `<a class="gdnt-anchor" href="${link}">${linkPage.display}</a>`
+        },
+        buildListElement: function(list, cl, actiontt, deletett, extraStyle) {
             var output = '';
             for (const linkPage of list) {
                //<div class="navigation-item location-indicator-highlight" role="menuitem" id="a4jzle:170" style="user-select: none; padding-right: 8px;"><div class="navigation-item-content navigation-item-title navigation-item-level-0" data-tooltip="Enhanced Attributes Storage/Access Design Review" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">Enhanced Attributes Storage/Access Design Review</div></div>
@@ -249,18 +255,18 @@
                 const link = linkPage.page || linkPage.note;
                 console.log("Link: " + link);
                 output += `
-<div class="gdnt-deletable navigation-item ${cl}" role="menuitem" style="user-select: none;" data-deletable-tt="${tt}" value="${link}" padding-right: 8px; margin-bottom: 0px;">
-    <div class="gdnt-deletable gdnt-deletable-inner navigation-item-content navigation-item-level-1" ${extraStyle} data-tooltip="${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8"><a class="gdnt-anchor" href="${link}">${linkPage.display}</a></div>
+<div class="gdnt-deletable navigation-item ${cl}" role="menuitem" style="user-select: none;" data-deletable-tt="${deletett}" value="${link}" padding-right: 8px; margin-bottom: 0px;">
+    <div class="gdnt-deletable gdnt-deletable-inner navigation-item-content navigation-item-level-1" ${extraStyle} data-tooltip="${actiontt}${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">${this.buildListElementAnchor(cl, linkPage, link)}</div>
 </div>`;
             }
             return output;
         },
-        buildList: function(list, cl, tt, extraStyle) {
+        buildList: function(list, cl, actiontt, deletett, extraStyle) {
             return `
         <div class="updating-navigation-item-list">
             <div class="updating-navigation-item-list">
                 <div class="navigation-item-list goog-container" tabindex="0" style="user-select: none; padding-right: 15px;">
-                    ${this.buildListElements(list, cl, tt, extraStyle)}
+                    ${this.buildListElement(list, cl, actiontt, deletett, extraStyle)}
                 </div>
             </div>
         </div>`;
@@ -286,7 +292,7 @@
        <div class="navigation-widget-smart-summary-container-1">
             <div class="docs-material kix-smart-summary-view" style="padding-bottom:0px">
                 <div class="kix-smart-summary-view-header-container">
-                    <div class=" gdnt-notes kix-smart-summary-view-header navigation-widget-header" id="kix-smart-summary-view-header" gdnt-note="${storageData.noteData.note}" role="heading">
+                    <div class="gdnt-notes-clickable kix-smart-summary-view-header navigation-widget-header" id="kix-smart-summary-view-header" gdnt-note="${storageData.noteData.note}" role="heading">
                         Notes: <div class="navigation-item-content" style="display:inline"><a class="gdnt-anchor" href="${storageData.noteData.note}">${storageData.noteData.display}</a></div>
                     </div>
                     <!-- Edit Note -->
@@ -319,7 +325,7 @@
                     <div class="navigation-widget-header navigation-widget-outline-header" style="padding:0" role="heading">
                         Existing Notes Documents:
                     </div>
-                    ${this.buildList(storageData.notesList, 'gdnt-note', 'Note', 'style="padding-left: 0px;"')}
+                    ${this.buildList(storageData.notesList, 'gdnt-note', 'Add this page to ', 'Note', 'style="padding-left: 0px;"')}
                 <div class="kix-smart-summary-view-separator">
                 </div>
             </div>
@@ -327,12 +333,12 @@
         <div class="navigation-widget-header navigation-widget-outline-header" style="padding-bottom:0px" role="heading">
             Pages Linked to this page:
         </div>
-        ${this.buildList(storageData.pageNote.linkedPages, 'gdnr-note-page', 'Page', '')}
+        ${this.buildList(storageData.pageNote.linkedPages, 'gdnt-note-page', 'Open ', 'Page', '')}
 
         <div class="navigation-widget-header navigation-widget-outline-header" style="padding-bottom:0px" role="heading">
             Pages Linked to same note:
         </div>
-        ${this.buildList(storageData.noteData.linkedPages, 'gdnr-note-page', 'Page', '')}
+        ${this.buildList(storageData.noteData.linkedPages, 'gdnt-note-page', 'Open ', 'Page', '')}
         <div class="outlines-widget">
         </div>`;
         }
@@ -378,16 +384,16 @@
         delPageNoteClick: function(event, page) {
             var dirty = false;
             console.log("MO: " + JSON.stringify(this.mouseOverDeletable.classList, null, 4));
-            if (this.mouseOverDeletable.classList.contains('gdnr-note-page')) {
+            if (this.mouseOverDeletable.classList.contains('gdnt-note-page')) {
                 Storage.setPageNotes(page, '');
                 dirty = true;
             }
-            else if (this.mouseOverDeletable.classList.contains('gdnr-note')) {
+            else if (this.mouseOverDeletable.classList.contains('gdnt-note')) {
                 const confirmDelete = confirm(`
 Deleting a Note will delete all linking pages from the internal DB.
 Are you sure?`);
                 if (confirmDelete) {
-                    Storage.delNote(note);
+                    Storage.delNote(page);
                     dirty = true;
                 }
             }
@@ -456,7 +462,8 @@ Are you sure?`);
             }
 
             // Make sure the delete button is visable and scrolled to the correct location.
-            const top = this.mouseOverDeletable.getBoundingClientRect().top + window.scrollY - 177 + document.getElementsByClassName('navigation-widget-content')[0].scrollTop;
+            //const top = this.mouseOverDeletable.getBoundingClientRect().top + window.scrollY - 47 - document.getElementById('kix-horizontal-ruler-container').offsetHeight - document.getElementById('docs-chrome').offsetHeight + document.getElementsByClassName('navigation-widget-content')[0].scrollTop;
+            const top = this.mouseOverDeletable.getBoundingClientRect().top + window.scrollY - document.getElementsByClassName('left-sidebar-container-content')[0].getBoundingClientRect().top - 49 + document.getElementsByClassName('navigation-widget-content')[0].scrollTop;
             const cross = document.getElementById('gdnt-delete-item');
             cross.style.top = `${top}px`;
             cross.style.display = 'block';
@@ -519,13 +526,6 @@ Are you sure?`);
                 //console.log('->Leave Remove');
             }
         },
-        clickableEnter: function(event) {
-            event.target.children[0].style.color = '#0B57D0';
-        },
-        clickableLeave: function(event) {
-            event.target.children[0].style.color = '#1F1F1F';
-        },
-
         addUI: function(page)
         {
             const storageData = Storage.sessionStart((session) => {
@@ -550,12 +550,6 @@ Are you sure?`);
 
             block.innerHTML = UIBuilder.build(storageData);
 
-
-            if (storageData.hasNote) {
-                const note = document.getElementsByClassName('gdnt-notes')[0];
-                note.addEventListener('mouseenter', (event) => {this.clickableEnter(event);});
-                note.addEventListener('mouseleave', (event) => {this.clickableLeave(event);});
-            }
             document.getElementById('gdnt-notes-edit').style.display = storageData.hasNote ? 'block' : 'none';
             document.getElementById('gdnt-notes-add').style.display = storageData.hasNote ? 'none' : 'block';
             document.getElementById('gdnt-notes-list-of-notes').style.display = storageData.hasNote ? 'none' : 'block';
@@ -567,12 +561,14 @@ Are you sure?`);
                 link.addEventListener('mouseenter', (event) => {this.deleteableEnter(event)});
                 link.addEventListener('mouseleave', (event) => {this.deletableLeave(event)});
             }
+            for (const link of document.getElementsByClassName('gdnt-note')) {
+                link.addEventListener('mouseenter', (event) => {event.target.children[0].style.color = 'green';});
+                link.addEventListener('mouseleave', (event) => {event.target.children[0].style.color = '#444746';});
+                link.addEventListener('click', (event) => {UI.addNotesClickPageClick(event, link.getAttribute('value'));});
+            }
 /*
             // Note: This function is called after these elements are loaded (see waitForKeyElements below)
             document.getElementById('GDNTNotesRefrButton').addEventListener('click', (event) => {UI.refreshNotesClick(event);});
-            for (const link of document.getElementsByClassName('NotesPage')) {
-                link.addEventListener('click', (event) => {UI.addNotesClickPageClick(event, link.getAttribute('value'));});
-            }
 */
         }
     };
@@ -589,6 +585,9 @@ Are you sure?`);
     // Basically the google docs page has to execute some code to add the different parts of the document.
     // This waits until those parts of the document exist then adds this UI into the middle of that.
     GM_addStyle ( `
+        div.gdnt-note {
+            color: green;
+        }
         a.gdnt-anchor {
             color: inherit;
             text-decoration: none;
