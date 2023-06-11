@@ -19,7 +19,7 @@ class UIBuilder {
                 margin-bottom: 0;
             }
         `);
-    };
+    }
 
     buildLabelList(labelData) {
         var output = '';
@@ -28,7 +28,7 @@ class UIBuilder {
 
         }
         return output;
-    };
+    }
 
     buildListElement(list, cl, actiontt, deletett, extraStyle, anchor, linker) {
         var output = '';
@@ -46,7 +46,7 @@ class UIBuilder {
 </div>`;
         }
         return output;
-    };
+    }
 
     buildLabels(storageData) {
         var output = '';
@@ -62,7 +62,7 @@ class UIBuilder {
             }
         }
         return output;
-    };
+    }
 
     buildList(list, cl, actiontt, deletett, extraStyle, anchor, linker) {
         return `
@@ -73,7 +73,7 @@ class UIBuilder {
                 </div>
             </div>
         </div>`;
-    };
+    }
 
     build(storageData) {
         return `
@@ -180,4 +180,4 @@ class UIBuilder {
             ${this.buildLabels(storageData)}
         </div>`;
     }
-};
+}

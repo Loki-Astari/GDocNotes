@@ -14,12 +14,12 @@ class Storage {
     getGDNTData() {
         const GDNTStorageText = localStorage.getItem(this.GDNTStorageName);
         return JSON.parse(GDNTStorageText || '{"pages":{}, "notes":[], "labels":[]}');
-    };
+    }
 
     // Private
     setGDNTData(newValue) {
         localStorage.setItem(this.GDNTStorageName, JSON.stringify(newValue));
-    };
+    }
 
     // Public
     sessionStart(action) {
@@ -50,7 +50,7 @@ class Storage {
             }
         }
         return;
-    };
+    }
 
     // public
     // Uses session
@@ -63,7 +63,7 @@ class Storage {
             notesPage.display = title;
             return true;
         });
-    };
+    }
 
     // Public
     // Uses session
@@ -72,7 +72,7 @@ class Storage {
             session.setPageNotesData(page, notes);
             return true;
         });
-    };
+    }
 
     // Public
     // Uses session
@@ -85,7 +85,7 @@ class Storage {
             session.setPageLabelsData(page, currentLabels);
             return true;
         });
-    };
+    }
 
     // Public
     // Uses session
@@ -99,7 +99,7 @@ class Storage {
             session.delNoteInfo(note);
             return true;
         });
-    };
+    }
 
     // Public
     // Uses session
@@ -115,5 +115,5 @@ class Storage {
             session.delLabelInfo(label);
             return true;
         });
-    };
-};
+    }
+}

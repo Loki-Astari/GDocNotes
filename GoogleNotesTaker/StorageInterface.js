@@ -16,7 +16,8 @@ class StorageInterface {
         this.pages = storeObject.pages;
         this.notes = storeObject.notes;
         this.labels = storeObject.labels;
-    };
+    }
+
     // Public
     static GDNTStorageNoteDefaultDisplay = '* Note Waiting For Title *';
 
@@ -28,12 +29,12 @@ class StorageInterface {
             this.pages[page] = {note: '', labels: []};
         }
         return this.pages[page];
-    };
+    }
 
     // Public
     delPageNote(page) {
         delete this.pages[page];
-    };
+    }
 
     // Public
     getNotesInfo(note) {
@@ -45,7 +46,8 @@ class StorageInterface {
             find = this.notes.filter(obj => obj.note == note);
         }
         return find[0];
-    };
+    }
+
     // Public
     getLabelInfo(label) {
         var find = this.labels.filter(obj => obj.label == label);
@@ -56,29 +58,29 @@ class StorageInterface {
             find = this.labels.filter(obj => obj.label == label);
         }
         return find[0];
-    };
+    }
 
     // Public
     findNoteInfo(note) {
         var find = this.notes.filter(obj => obj.note == note);
         return find.length == 0 ? {note: '', display:'', linkedPages: []} : find[0];
-    };
+    }
 
     // Public
     delNoteInfo(note) {
         this.notes = this.notes.filter(obj => obj.note != note);
-    };
+    }
 
     // Public
     findLabelInfo(label) {
         var find = this.labels.filter(obj => obj.label == label);
         return find.length == 0 ? {label: '', linkedPages: []} : find[0];
-    };
+    }
 
     // Public
     delLabelInfo(label) {
         this.labels = this.labels.filter(obj => obj.label != label);
-    };
+    }
 
     // Public
     setPageNotesData(page, note) {
@@ -98,7 +100,8 @@ class StorageInterface {
         else {
             this.delPageNote(page);
         }
-    };
+    }
+
     // Public
     setPageLabelsData(page, labels) {
         const pageData = this.getPageInfo(page);
@@ -121,27 +124,32 @@ class StorageInterface {
             }
         }
         pageData.labels = labels;
-    };
+    }
+
     // Public
     getPageNoteInfo(page) {
         const pageData = this.getPageInfo(page);
         return pageData.note == '' ? {display:'', linkedPages:[]} : this.getNotesInfo(pageData.note);
-    };
+    }
+
     // Public
     getPageLabelInfo(page) {
         const pageData = this.getPageInfo(page);
         return pageData.labels;
-    };
+    }
+
     // Public
     getPageData(page) {
         return this.getPageInfo(page);
-    };
+    }
+
     // Public
     getListAllNotes() {
         return this.notes;
-    };
+    }
+
     // Public
     getListAllLabels() {
         return this.labels;
-    };
-};
+    }
+}

@@ -24,13 +24,13 @@ class UI {
             }
         });
         return note;
-    };
+    }
 
     // Private
     addNotes(notes) {
         this.saveNotePage(cleanUrl(notes));
         this.addUI();
-    };
+    }
 
     // Private
     addLabel(label) {
@@ -38,7 +38,7 @@ class UI {
             return;
         }
         this.storage.setPageLabels(this.currentPage, label);
-    };
+    }
 
     // Event Handler
     delPageNoteClick(event, page) {
@@ -81,32 +81,32 @@ Are you sure?`);
         if (dirty) {
             this.addUI();
         }
-    };
+    }
 
     // Event Handler
     addNotesClick(event, page) {
         this.addNotes(prompt('URL of NotePage: ', page));
-    };
+    }
 
     // Event Handler
     addLabelClick(event) {
         this.addLabel(prompt('Label: ', ''));
-    };
+    }
 
     // Event Handler
     addNotesClickPageClick(event, notes) {
         this.addNotes(notes);
-    };
+    }
 
     // Event Handler
     addLabelClickPageClick(event, label) {
         this.addLabel(label);
-    };
+    }
 
     // Event Handler
     refreshNotesClickfunction(event) {
         this.addUI();
-    };
+    }
 
     getOrCreateRoot() {
 
@@ -161,7 +161,8 @@ Are you sure?`);
         const name = this.mouseOverDeletable.children[0].getAttribute('data-tooltip');
         cross.setAttribute('data-tooltip', removeToolTip);
         cross.children[0].setAttribute('data-tooltip', removeToolTip);
-    };
+    }
+
     deletableLeave(event) {
         var resetCurrentMouseOver = false;
         const isSrcDeleteButton = event.target.classList.contains('gdnt-deletable-nofocus');
@@ -205,7 +206,7 @@ Are you sure?`);
         if (!event.relatedTarget.classList.contains('gdnt-deletable')) {
             document.getElementById('gdnt-delete-item').style.display = 'none';
         }
-    };
+    }
 
     addUI() {
         const storageData = this.storage.sessionStart((session) => {
@@ -254,7 +255,7 @@ Are you sure?`);
             link.addEventListener('mouseleave', (event) => {event.target.children[0].style.color = '#444746';});
             link.addEventListener('click', (event) => {this.addNotesClickPageClick(event, link.getAttribute('value'));});
         }
-    };
+    }
 
     createUI() {
         this.addUI();
@@ -275,11 +276,11 @@ Are you sure?`);
                 }
             }
         });
-    };
+    }
 
     constructor(storage, uiBuilder, page) {
         this.storage = storage;
         this.uiBuilder = uiBuilder;
         this.currentPage = page;
-    };
-};
+    }
+}
