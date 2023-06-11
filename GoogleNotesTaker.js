@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google Docs Note Taker
 // @namespace    http://LokiAstari.com/
-// @version      0.3
+// @version      0.4
 // @description  Link a private google doc to any web page. Link multiple pages to a single note.
 // @author       Loki Astari
 // @match        https://docs.google.com/document/*
@@ -52,7 +52,9 @@
 
     const Storage = {
         // Private
-        GDNTStorageName: 'GDNTPageDataA1',
+        GDNTStorageName: 'GDNTPageData',
+        GDNTStoragePageDefaultDisplay: '*Page*',
+        GDNTStorageNoteDefaultDisplay: '* Note Waiting For Title *',
         // Private
         getGDNTData: function() {
             const GDNTStorageText = localStorage.getItem(this.GDNTStorageName);
@@ -67,109 +69,106 @@
             if (!session.hasOwnProperty(page)) {
                 // This is the main object that can be interacted with externally.
                 // The other interface usually return this.
-                session[page] = {page: '', display: 'UnSet', linkedPages: []};
+                session[page] = {page: '', display: this.GDNTStorageNoteDefaultDisplay, linkedPages: []};
             }
             return session[page];
         },
         // Private
-        setPageNotesData: function(session, page, notes) {
+        setPageNotesData: function(session, page, note) {
             const pageData = this.getPageNotes(session, page);
             if (pageData.page) {
                 const notesDate = this.getPageNotes(session, pageData.page);
                 notesDate.linkedPages = notesDate.linkedPages.filter(obj => obj.page != page);
             }
-            pageData.page = notes;
-            pageData.display = '*Fetching Note Title*';
-            if (notes) {
-                const notesData = this.getPageNotes(session, notes);
+            if (note) {
+                pageData.page = note;
+                pageData.display = this.GDNTStoragePageDefaultDisplay;
+                const notesData = this.getPageNotes(session, note);
                 const filterPages = notesData.linkedPages.filter(obj => obj.page == page);
                 if (filterPages.length == 0) {
-                    alert("Setting Display : " + cleanTitle(document.title));
                     notesData.linkedPages.push({page: page, display: cleanTitle(document.title)});
                 }
 
                 const notesPageList = this.getPageNotes(session, '');
-                const filterNotes = notesPageList.linkedPages.filter(obj => obj.page == notes);
+                const filterNotes = notesPageList.linkedPages.filter(obj => obj.page == note);
                 if (filterNotes.length == 0) {
-                    notesPageList.linkedPages.push({page: notes, display: 'unknown'});
+                    notesPageList.linkedPages.push({page: note, display: this.GDNTStorageNoteDefaultDisplay});
                 }
+            }
+            else {
+                delete session[page];
             }
         },
         // public
-        // Uses seassion
-        fixSavedData: function(page, title) {
-            this.seassionStart((session) => {
-                alert("Fixing");
+        // Uses session
+        fixSavedData: function(note, title) {
+            this.sessionStart((session) => {
                 const notesPageList = this.getPageNotes(session, '');
-                const filter = notesPageList.linkedPages.filter(obj => obj.page == page);
+                const filter = notesPageList.linkedPages.filter(obj => obj.page == note);
                 if (filter.length == 0) {
-                    alert("Fixing Not Needed");
                     return {save: false, result: null};
                 }
-                const notesPage = this.getPageNotes(session, page);
-                if (notesPage.display != 'UnSet') {
-                    alert("Fixing Done: " + notesPage.display);
-                    //return {save: false, result: null};
+                const notesPage = this.getPageNotes(session, note);
+                if (notesPage.display != this.GDNTStorageNoteDefaultDisplay) {
+                    return {save: false, result: null};
                 }
-                alert("Fixing the Title now");
-                filter[0].display = title;
                 notesPage.display = title;
-                for (const linkPage of notesPage.linkedPages) {
-                    const pageData = this.getPageNotes(session, linkPage.page);
-                    pageData.display = title;
-                }
+                filter[0].display = title;
                 return {save: true, result: null};
             });
         },
         // Public
-        // Uses seassion
+        // Uses session
         setPageNotes: function(page, notes) {
-            this.seassionStart((session) => {
+            this.sessionStart((session) => {
                 this.setPageNotesData(session, page, notes);
                 return {save: true, result: null};
             });
         },
         // Public
-        // Uses seassion
+        // Uses session
         notesPageLink: function(page) {
-            return this.seassionStart((session) => {
+            return this.sessionStart((session) => {
                 const pageData = this.getPageNotes(session, page);
                 return {save: false, result: pageData.page}
             });
         },
         // Public
-        // Uses seassion
+        // Uses session
         delNote: function(note) {
-            this.seassionStart((session) => {
-                const noteData = this.getPageNotes(session, note);
-                for (const page of noteData.linkedPages) {
-                    this.setPageNotesData(session, page, '');
-                }
+            this.sessionStart((session) => {
                 const noteList = this.getPageNotes(session, '');
                 noteList.linkedPages = noteList.linkedPages.filter(obj => obj.page != note);
-                return {save: true, result: null}
+
+                const noteData = this.getPageNotes(session, note);
+                for (const page of noteData.linkedPages) {
+                    this.setPageNotesData(session, page.page, null);
+                }
+
+                delete session[note];
+                return {save:true, result:null};
             });
         },
         // Public
-        // Needs Seassion
+        // Needs session
         getListAllNotes: function(session) {
             return this.getPageNotes(session, '').linkedPages;
         },
         // Public
-        // Needs Seassion
+        // Needs session
         getNoteData: function(session, page) {
             const pageData = this.getPageNotes(session, page);
             return pageData.page == '' ? {page:'', display:'', linkedPages:[]} : this.getPageNotes(session, pageData.page);
         },
         // Public
-        // Needs Seassion
+        // Needs session
         getPageData: function(session, page) {
             return this.getPageNotes(session, page);
         },
-        // Private: Internally used by seassionStart
+        // Private: Internally used by sessionStart
         seaasionInUse: false,
         // Public
-        seassionStart: function(action) {
+        sessionStart: function(action) {
             if (this.seaasionInUse) {
                 // Should wait (otherwise we will loose data)
                 // But very low chance of that happening as there is only one async call
@@ -179,6 +178,10 @@
             this.seaasionInUse = true;
             const session = this.getGDNTData();
             const result = action(session);
+            if (result == null) {
+                return null;
+            }
+            console.log("Result: " + result[0] + ", " + result[1]);
             if (result.save) {
                 this.setGDNTData(session)
             }
@@ -188,22 +191,22 @@
     };
     const UI = {
         // Private
-        saveNotePage: function(notes) {
-            if (notes == currentPage) {
+        saveNotePage: function(note) {
+            if (note == currentPage) {
                 return null;
             }
-            Storage.setPageNotes(currentPage, notes);
+            Storage.setPageNotes(currentPage, note);
             $.ajax({
                 method: 'HEAD',
-                url: notes,
+                url: note,
                 success: function(pageHead) {
                     const title = cleanTitle($(pageHead).filter('title').text());
                     if (title) {
-                        Storage.fixSavedData(notes, title);
+                        Storage.fixSavedData(note, title);
                     }
                 }
             });
-            return notes;
+            return note;
         },
         // Private
         askUserForNotesPage: function() {
@@ -280,7 +283,7 @@ Are you sure?`);
                     cursor:                 pointer;
                 }
             `);
-            const storageData = Storage.seassionStart((session) => {
+            const storageData = Storage.sessionStart((session) => {
                 const pageData = Storage.getPageData(session, page);
                 const noteData = Storage.getNoteData(session, page);
                 const notesList = Storage.getListAllNotes(session);
@@ -367,7 +370,16 @@ Are you sure?`);
 
         }
     };
-
+    const resetItem = false;
+    if (resetItem) {
+        console.log('Info Before: => ' + JSON.stringify(localStorage.getItem(Storage.GDNTStorageName)));
+        localStorage.removeItem(Storage.GDNTStorageName, undefined);
+        console.log('Info After:  => ' + localStorage.getItem(Storage.GDNTStorageName));
+    }
+    Storage.sessionStart((session) => {
+        console.log('Storage: ' + JSON.stringify(session, null, 4));
+        return {save:false, result: null};
+    });
     // Wait for particular DOM elements to exist before starting up my code.
     // Basically the google docs page has to execute some code to add the different parts of the document.
     // This waits until those parts of the document exist then adds this UI into the middle of that.
