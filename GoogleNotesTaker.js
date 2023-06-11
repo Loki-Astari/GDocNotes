@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google Docs Note Taker
 // @namespace    http://LokiAstari.com/
-// @version      0.4
+// @version      0.5
 // @description  Link a private google doc to any web page. Link multiple pages to a single note.
 // @author       Loki Astari
 // @match        https://docs.google.com/document/*
@@ -114,7 +114,7 @@
                 }
                 notesPage.display = title;
                 filter[0].display = title;
-                return {save: true, result: null};
+                return true;
             });
         },
         // Public
@@ -122,7 +122,7 @@
         setPageNotes: function(page, notes) {
             this.sessionStart((session) => {
                 this.setPageNotesData(session, page, notes);
-                return {save: true, result: null};
+                return true;
             });
         },
         // Public
@@ -130,7 +130,7 @@
         notesPageLink: function(page) {
             return this.sessionStart((session) => {
                 const pageData = this.getPageNotes(session, page);
-                return {save: false, result: pageData.page}
+                return [false, pageData.page];
             });
         },
         // Public
@@ -146,7 +146,7 @@
                 }
 
                 delete session[note];
-                return {save:true, result:null};
+                return true;
             });
         },
         // Public
@@ -178,15 +178,22 @@
             this.seaasionInUse = true;
             const session = this.getGDNTData();
             const result = action(session);
-            if (result == null) {
-                return null;
+            if (result === undefined || result === null || result === false) {
+                return;
             }
-            console.log("Result: " + result[0] + ", " + result[1]);
-            if (result.save) {
+            if (result === true) {
                 this.setGDNTData(session)
+                return;
             }
-            this.seaasionInUse = false;
-            return result.result;
+            if (result.constructor === Array) {
+                if (result.length > 0 && result[0] === true) {
+                    this.setGDNTData(session);
+                }
+                if (result.length > 1) {
+                    return result[1];
+                }
+            }
+            return;
         },
     };
     const UI = {
@@ -287,7 +294,7 @@ Are you sure?`);
                 const pageData = Storage.getPageData(session, page);
                 const noteData = Storage.getNoteData(session, page);
                 const notesList = Storage.getListAllNotes(session);
-                return {save:false, result: {pageData: pageData, noteData: noteData, notesList: notesList}};
+                return [false, {pageData: pageData, noteData: noteData, notesList: notesList}];
             });
 
             const hasNote = storageData.pageData.page != '';
@@ -378,7 +385,6 @@ Are you sure?`);
     }
     Storage.sessionStart((session) => {
         console.log('Storage: ' + JSON.stringify(session, null, 4));
-        return {save:false, result: null};
     });
     // Wait for particular DOM elements to exist before starting up my code.
     // Basically the google docs page has to execute some code to add the different parts of the document.
