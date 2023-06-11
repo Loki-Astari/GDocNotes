@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google Docs Note Taker
 // @namespace    http://LokiAstari.com/
-// @version      0.10
+// @version      0.11
 // @description  Link a private google doc to any web page. Link multiple pages to a single note.
 // @author       Loki Astari
 // @match        https://docs.google.com/document/*
@@ -222,15 +222,15 @@
         // Uses session
         delNote: function(note) {
             this.sessionStart((session) => {
-                console.log("Delete Note >" + note + "<");
+                console.log('Delete Note >' + note + '<');
                 const noteData = session.getNotesInfo(note);
                 for (const page of noteData.linkedPages) {
-                    console.log("Delete Page: >" + page.page + "<");
+                    console.log('Delete Page: >' + page.page + '<');
                     session.delPageNote(page.page);
                 }
 
                 session.delNoteInfo(note);
-                console.log("Session: " + JSON.stringify(session));
+                console.log('Session: ' + JSON.stringify(session));
                 return true;
             });
         },
@@ -317,23 +317,9 @@ Are you sure?`);
             this.addUI(currentPage);
         },
         // Init and refresh the UI.
+        mouseOverDeletable: null,
         addUI: function(page)
         {
-            GM_addStyle ( `
-                #GDNTContainer {
-                    position:               static;
-                    font-size:              12px;
-                    background:             orange;
-                    border:                 1px outset black;
-                    margin:                 1px;
-                    padding:                5px 5px;
-                    opacity:                0.7;
-                    z-index:                1100;
-                }
-                #GDNTButton {
-                    cursor:                 pointer;
-                }
-            `);
             const storageData = Storage.sessionStart((session) => {
                 const pageData = session.getPageData(page);
                 const pageNote = session.findNoteInfo(page);
@@ -356,15 +342,15 @@ Are you sure?`);
             var list1 = '';
             for (const linkPage of storageData.notesList) {
                 list1 += `
-<div class="navigation-item" role="menuitem" style="user-select: none; padding-right: 8px; margin-bottom: 0px;">
-    <div class="navigation-item-content navigation-item-level-1" style="padding-left: 0px;" data-tooltip="${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">${linkPage.display}</div>
+<div class="gdnt-deletable navigation-item" role="menuitem" style="user-select: none; padding-right: 8px; margin-bottom: 0px;">
+    <div class="gdnt-deletable gdnt-deletable-inner navigation-item-content navigation-item-level-1" style="padding-left: 0px;" data-tooltip="${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">${linkPage.display}</div>
 </div>`;
             }
             var list2 = '';
             for (const linkPage of storageData.pageNote.linkedPages) {
                 list2 += `
-<div class="navigation-item" role="menuitem" style="user-select: none; padding-right: 8px; margin-bottom: 0px";>
-    <div class="navigation-item-content navigation-item-level-1" data-tooltip="${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">${linkPage.display}</div>
+<div class="gdnt-deletable navigation-item" role="menuitem" style="user-select: none; padding-right: 8px; margin-bottom: 0px";>
+    <div class="gdnt-deletable gdnt-deletable-inner navigation-item-content navigation-item-level-1" data-tooltip="${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">${linkPage.display}</div>
 </div>
 `;
             }
@@ -378,8 +364,8 @@ Are you sure?`);
                     //<div class="navigation-item" role="menuitem" id="a4jzle:174" style="user-select: none; padding-right: 8px;"><div class="navigation-item-content navigation-item-level-1" data-tooltip="Item4" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">Item 4</div></div>
                     //<div class="navigation-item" role="menuitem" id="a4jzle:175" style="user-select: none; padding-right: 8px;"><div class="navigation-item-content navigation-item-level-2" data-tooltip="Item5" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">Item 5</div></div>
                 list3 += `
-<div class="navigation-item" role="menuitem" style="user-select: none; padding-right: 8px; margin-bottom: 0px;">
-    <div class="navigation-item-content navigation-item-level-1" data-tooltip="${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">${linkPage.display}</div>
+<div class="gdnt-deletable navigation-item" role="menuitem" style="user-select: none; padding-right: 8px; margin-bottom: 0px;">
+    <div class="gdnt-deletable gdnt-deletable-inner navigation-item-content navigation-item-level-1" data-tooltip="${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">${linkPage.display}</div>
 </div>
 `;
             }
@@ -388,15 +374,6 @@ Are you sure?`);
         <div class="updating-navigation-item-list">
             <div class="updating-navigation-item-list">
                 <div class="navigation-item-list goog-container" tabindex="0" style="user-select: none; padding-right: 15px;">
-                    <div class="navigation-widget-row-controls" style="top: 145px; right: 23px; display: none;">
-                        <div class="navigation-widget-row-controls-control navigation-widget-row-controls-suppress goog-inline-block goog-flat-button" role="button"data-tooltip="Remove from outline" data-tooltip-offset="-8" id="a4jzle:16y" tabindex="0" style="user-select: none;">
-                            <div class="docs-icon goog-inline-block ">
-                                <div class="docs-icon-img-container docs-icon-img docs-icon-close-thin">
-                                    &nbsp;
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 `;
             const blockText_ListSuffix =`
                 </div>
@@ -404,7 +381,22 @@ Are you sure?`);
         </div>
 `;
             const blockText = `
-        <div class="navigation-widget-smart-summary-container-1">
+       <div class="updating-navigation-item-list">
+           <div class="updating-navigation-item-list">
+               <div class="navigation-item-list goog-container" tabindex="0" style="user-select: none; padding-right: 15px;">
+                   <div id="gdnt-delete-item" class="gdnt-deletable gdnt-deletable-nofocus navigation-widget-row-controls" style="top: 145px; right: 23px; display: none;">
+                       <div class="gdnt-deletable gdnt-deletable-nofocus navigation-widget-row-controls-control navigation-widget-row-controls-suppress goog-inline-block goog-flat-button" role="button"data-tooltip="Remove from outline" data-tooltip-offset="-8" id="a4jzle:16y" tabindex="0" style="user-select: none;">
+                           <div class="gdnt-deletable gdnt-deletable-nofocus docs-icon goog-inline-block ">
+                               <div class="gdnt-deletable gdnt-deletable-nofocus docs-icon-img-container docs-icon-img docs-icon-close-thin">
+                                   &nbsp;
+                               </div>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+           </div>
+       </div>
+       <div class="navigation-widget-smart-summary-container-1">
             <div class="docs-material kix-smart-summary-view" style="padding-bottom:0px">
                 <div class="kix-smart-summary-view-header-container">
                     <div class="kix-smart-summary-view-header navigation-widget-header" id="kix-smart-summary-view-header" role="heading">
@@ -488,6 +480,74 @@ Are you sure?`);
             document.getElementById('gdnt-notes-edit').style.display = hasNote ? 'block' : 'none';
             document.getElementById('gdnt-notes-add').style.display = hasNote ? 'none' : 'block';
             document.getElementById('gdnt-notes-list-of-notes').style.display = hasNote ? 'none' : 'block';
+            for (const link of document.getElementsByClassName('gdnt-deletable')) {
+                link.addEventListener('mouseenter', (event) => {
+                    const isDeleteButton = event.target.classList.contains('gdnt-deletable-nofocus');
+                    if (isDeleteButton) {
+                        //console.log('Enter: Delete Button');
+                        return;
+                    }
+
+                    const newOver = (event.target.classList.contains('gdnt-deletable-inner')) ? event.target.parentNode : event.target;
+                    if (this.mouseOverDeletable != newOver) {
+                        //console.log('Enter: New Over');
+                        this.mouseOverDeletable = newOver;
+                        this.mouseOverDeletable.classList.add('goog-button-hover');
+                        this.mouseOverDeletable.style.paddingRight = '37px';
+                        this.mouseOverDeletable.children[0].setAttribute('data-tooltip-offset', '-37');
+                        this.mouseOverDeletable.children[0].style.color = '#0B57D0';
+                    }
+
+                    const top = this.mouseOverDeletable.getBoundingClientRect().top + window.scrollY - 177 + document.getElementsByClassName('navigation-widget-content')[0].scrollTop;
+                    const cross = document.getElementById('gdnt-delete-item');
+                    cross.style.top = `${top}px`;
+                    cross.style.display = 'block';
+                });
+                link.addEventListener('mouseleave', (event) => {
+                    //console.log('Leave:');
+                    var resetCurrentMouseOver = false;
+                    const isSrcDeleteButton = event.target.classList.contains('gdnt-deletable-nofocus');
+                    const isDestDeleteButton = event.relatedTarget.classList.contains('gdnt-deletable-nofocus');
+                    if (isSrcDeleteButton && isDestDeleteButton) {
+                        //console.log("  Leave Still in Delete");
+                        // No Action.
+                    }
+                    else if (isSrcDeleteButton) {
+                        // Leaving the delete button.
+                        //console.log('  Leave Src Delete');
+                        const newOver = (event.relatedTarget.classList.contains('gdnt-deletable-inner')) ? event.relatedTarget.parentNode : event.relatedTarget;
+                        if (newOver != this.mouseOverDeletable) {
+                            //console.log('    Leave Src Delete Dst Not control');
+                            resetCurrentMouseOver = true;
+                        }
+                    }
+                    else if (isDestDeleteButton) {
+                        //console.log('  Leave: Dst Delete');
+                        resetCurrentMouseOver = false
+                    }
+                    else {
+                        //console.log('  Leave: Control');
+                        if (event.target == this.mouseOverDeletable) {
+                            //console.log('    Leave: Constrol Active');
+                            resetCurrentMouseOver = true;
+                        }
+                    }
+
+                    if (resetCurrentMouseOver && this.mouseOverDeletable) {
+                        //console.log('  Leave Reset');
+                        this.mouseOverDeletable.classList.remove('goog-button-hover');
+                        this.mouseOverDeletable.style.paddingRight = '8px';
+                        this.mouseOverDeletable.children[0].setAttribute('data-tooltip-offset', '-8');
+                        this.mouseOverDeletable.children[0].style.color = '#444746';
+                        this.mouseOverDeletable = null;
+                    }
+
+                    if (!event.relatedTarget.classList.contains('gdnt-deletable')) {
+                        document.getElementById('gdnt-delete-item').style.display = 'none';
+                        //console.log('->Leave Remove');
+                    }
+                });
+            }
 /*
             // Note: This function is called after these elements are loaded (see waitForKeyElements below)
             document.getElementById('GDNTNotesRefrButton').addEventListener('click', (event) => {UI.refreshNotesClick(event);});
