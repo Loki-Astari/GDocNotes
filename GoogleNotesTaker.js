@@ -25,7 +25,7 @@
 
     const uiBuilder = new UIBuilder();
 
-    const ui = new UI(storage, uiBuilder, cleanUrl(window.location.href));
+    const ui = new UI(storage, uiBuilder, Util.cleanUrl(window.location.href));
 
     // Wait for particular DOM elements to exist before starting up my code.
     // Basically the google docs page has to execute some code to add the different parts of the document.

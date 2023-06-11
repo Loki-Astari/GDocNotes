@@ -17,7 +17,7 @@ class UI {
             method: 'HEAD',
             url: note,
             success: function(pageHead) {
-                const title = cleanTitle($(pageHead).filter('title').text());
+                const title = Util.cleanTitle($(pageHead).filter('title').text());
                 if (title) {
                     this.storage.fixSavedData(note, title);
                 }
@@ -28,7 +28,7 @@ class UI {
 
     // Private
     addNotes(notes) {
-        this.saveNotePage(cleanUrl(notes));
+        this.saveNotePage(Util.cleanUrl(notes));
         this.addUI();
     }
 

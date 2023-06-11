@@ -94,7 +94,7 @@ class StorageInterface {
             const notesData = this.getNotesInfo(pageData.note);
             const filterPages = notesData.linkedPages.filter(obj => obj.page == page);
             if (filterPages.length == 0) {
-                notesData.linkedPages.push({page: page, display: cleanTitle(document.title)});
+                notesData.linkedPages.push({page: page, display: Util.cleanTitle(document.title)});
             }
         }
         else {
@@ -120,7 +120,7 @@ class StorageInterface {
             }
             else {
                 const labelData = this.getLabelInfo(label);
-                labelData.linkedPages.push({page: page, display: cleanTitle(document.title)});
+                labelData.linkedPages.push({page: page, display: Util.cleanTitle(document.title)});
             }
         }
         pageData.labels = labels;
