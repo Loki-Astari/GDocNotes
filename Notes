@@ -1,0 +1,39 @@
+#!/bin/bash
+
+function usage {
+
+cat - <<USAGE
+
+Usage:
+    ../Notes create-tests
+        Sets up tests for a script in a sub directory.
+
+    ../Notes run-tests
+        We don't expect you to use this command.
+        This is just here to make sure I remember how to run the tests.
+USAGE
+}
+
+echo "1: $1"
+
+if  [[ $1 == 'create-tests' ]]; then
+    if [[ -e 'package.json' ]]; then
+        echo "Looks like packages have already been installed."
+        exit 1
+    fi
+    #
+    # Install the Jest framework for Unit Testing.
+    #
+    npm install selenium-webdriver
+    npm init --y
+    npm install --save-dev jest
+    npm install -g chromedriver
+    npm init
+    echo "node_modules" >> .gitignore
+    git add package-lock.json package.json .gitignore
+    # git commit -a -m "Add Unit testing code"
+elif [[ $1 == 'run-tests' ]]; then
+    npm test
+else
+    usage
+fi
