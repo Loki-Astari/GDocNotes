@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google Docs Note Taker
 // @namespace    http://LokiAstari.com/
-// @version      0.9
+// @version      0.10
 // @description  Link a private google doc to any web page. Link multiple pages to a single note.
 // @author       Loki Astari
 // @match        https://docs.google.com/document/*
@@ -353,41 +353,119 @@ Are you sure?`);
                 hasNote:             ${hasNote}
             `);
 
-            const blockText_P1 = `
-                <div><input type="button" class="GDNTButton" value="Refresh" id="GDNTNotesRefrButton" /></div>
-                <div><input type="button" class="GDNTButton" value="Open Notes: ${storageData.noteData.display}" id="GDNTNeedsNote" style="display:${hasNote ? 'block' : 'none'}" /></div>
-                <div id="GDNTHasNote" class="GDNTContainer"  style="display:${hasNote ? 'none' : 'block'}">
-                    <div>This page does not have a note:</div>
-                    <ul>
-                        <input type="button" class="GDNTButton" value="Add Notes" id="GDNTNotesListButton" />`
-            const blockText_P2 = `
-                    </ul>
-                </div>
-                <div class="GDNTContainer"  style="display:${storageData.pageNote.linkedPages.length ? 'block' : 'none'}">
-                    <div>This is the Notes Page for:</div>
-                    <ul>`;
-            const blockText_P3 = `
-                    </ul>
-                </div>
-                <div class="GDNTContainer"  style="display:${storageData.noteData.linkedPages.length ? 'block' : 'none'}">
-                    <div>Other Pages that share the same Note:</div>
-                    <ul>`;
-            const blockText_P4 = `
-                    </ul>
-                </div>`;
-            const deleteIcon = 'https://icons.iconarchive.com/icons/paomedia/small-n-flat/16/sign-error-icon.png';
             var list1 = '';
             for (const linkPage of storageData.notesList) {
-                list1 += `<li><img class="DeleteNote" value="${linkPage.note}" src="${deleteIcon}"/><a class="NotesPage" value="${linkPage.note}">${linkPage.display}</a></li>`;
+                list1 += `
+<div class="navigation-item" role="menuitem" style="user-select: none; padding-right: 8px; margin-bottom: 0px;">
+    <div class="navigation-item-content navigation-item-level-1" style="padding-left: 0px;" data-tooltip="${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">${linkPage.display}</div>
+</div>`;
             }
             var list2 = '';
             for (const linkPage of storageData.pageNote.linkedPages) {
-                list2 += `<li><img class="DeletePageNote" value="${linkPage.page}" src="${deleteIcon}"/><a href="${linkPage.page}">${linkPage.display}</a></li>`;
+                list2 += `
+<div class="navigation-item" role="menuitem" style="user-select: none; padding-right: 8px; margin-bottom: 0px";>
+    <div class="navigation-item-content navigation-item-level-1" data-tooltip="${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">${linkPage.display}</div>
+</div>
+`;
             }
             var list3 = '';
             for (const linkPage of storageData.noteData.linkedPages) {
-                list3 += `<li><img class="DeletePageNote" value="${linkPage.page}" src="${deleteIcon}"/><a href="${linkPage.page}">${linkPage.display}</a></li>`;
+
+                    //<div class="navigation-item location-indicator-highlight" role="menuitem" id="a4jzle:170" style="user-select: none; padding-right: 8px;"><div class="navigation-item-content navigation-item-title navigation-item-level-0" data-tooltip="Enhanced Attributes Storage/Access Design Review" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">Enhanced Attributes Storage/Access Design Review</div></div>
+                    //<div class="navigation-item" role="menuitem" id="a4jzle:171" style="user-select: none; padding-right: 8px;"><div class="navigation-item-content navigation-item-level-1" data-tooltip="Item1" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">Item 1</div></div>
+                    //<div class="navigation-item" role="menuitem" id="a4jzle:172" style="user-select: none; padding-right: 8px;"><div class="navigation-item-content navigation-item-level-1" data-tooltip="Item2" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">Item 2</div></div>
+                    //<div class="navigation-item" role="menuitem" id="a4jzle:173" style="user-select: none; padding-right: 8px;"><div class="navigation-item-content navigation-item-title navigation-item-level-0" data-tooltip="Item3" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">Item 3</div></div>
+                    //<div class="navigation-item" role="menuitem" id="a4jzle:174" style="user-select: none; padding-right: 8px;"><div class="navigation-item-content navigation-item-level-1" data-tooltip="Item4" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">Item 4</div></div>
+                    //<div class="navigation-item" role="menuitem" id="a4jzle:175" style="user-select: none; padding-right: 8px;"><div class="navigation-item-content navigation-item-level-2" data-tooltip="Item5" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">Item 5</div></div>
+                list3 += `
+<div class="navigation-item" role="menuitem" style="user-select: none; padding-right: 8px; margin-bottom: 0px;">
+    <div class="navigation-item-content navigation-item-level-1" data-tooltip="${linkPage.display}" data-tooltip-align="r,c" data-tooltip-only-on-overflow="true" data-tooltip-offset="-8">${linkPage.display}</div>
+</div>
+`;
             }
+
+            const blockText_ListPrefix =`
+        <div class="updating-navigation-item-list">
+            <div class="updating-navigation-item-list">
+                <div class="navigation-item-list goog-container" tabindex="0" style="user-select: none; padding-right: 15px;">
+                    <div class="navigation-widget-row-controls" style="top: 145px; right: 23px; display: none;">
+                        <div class="navigation-widget-row-controls-control navigation-widget-row-controls-suppress goog-inline-block goog-flat-button" role="button"data-tooltip="Remove from outline" data-tooltip-offset="-8" id="a4jzle:16y" tabindex="0" style="user-select: none;">
+                            <div class="docs-icon goog-inline-block ">
+                                <div class="docs-icon-img-container docs-icon-img docs-icon-close-thin">
+                                    &nbsp;
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+`;
+            const blockText_ListSuffix =`
+                </div>
+            </div>
+        </div>
+`;
+            const blockText = `
+        <div class="navigation-widget-smart-summary-container-1">
+            <div class="docs-material kix-smart-summary-view" style="padding-bottom:0px">
+                <div class="kix-smart-summary-view-header-container">
+                    <div class="kix-smart-summary-view-header navigation-widget-header" id="kix-smart-summary-view-header" role="heading">
+                        Notes: ${storageData.noteData.display}
+                    </div>
+                    <!-- Edit Note -->
+                    <div id="gdnt-notes-edit" role="button" class="goog-inline-block jfk-button jfk-button-standard kix-smart-summary-edit-button" data-tooltip="Edit Notes" style="display: none;" data-ol-has-click-handler="">
+                        <div class="docs-icon goog-inline-block ">
+                            <div class="docs-icon-img-container docs-icon-img docs-icon-edit-outline">
+                                &nbsp;
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Add Note -->
+                    <div id="gdnt-notes-add" class="kix-smart-summary-entrypoint-container kix-smart-summary-header-button" style="display: none;">
+                        <div role="button" class="goog-inline-block jfk-button jfk-button-standard kix-smart-summary-add-button-promo kix-smart-summary-entrypoint-icon" data-ol-has-click-handler="">
+                            <div class="docs-icon goog-inline-block ">
+                                <div class="docs-icon-img-container docs-smart-summary-tinted docs-icon-img docs-icon-smart-summary">
+                                    &nbsp;
+                                </div>
+                            </div>
+                        </div>
+                        <div role="button" class="goog-inline-block jfk-button jfk-button-standard kix-smart-summary-add-button-default kix-smart-summary-entrypoint-icon" tabindex="0" data-tooltip-class="kix-default-tooltip" data-tooltip-offset="0" data-tooltip="Add Notes" data-ol-has-click-handler="">
+                            <div class="docs-icon goog-inline-block ">
+                                <div class="docs-icon-img-container docs-icon-img docs-icon-plus">
+                                    &nbsp;
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="gdnt-notes-list-of-notes" class="kix-smart-summary-view-content-container" style="display: none;">
+                    <div class="navigation-widget-header navigation-widget-outline-header" style="padding:0" role="heading">
+                        Existing Notes Documents:
+                    </div>
+                    ${blockText_ListPrefix}
+                        <!-- Add List of Known Notes: See list 1 -->
+                        ${list1}
+                    ${blockText_ListSuffix}
+                </div>
+                <div class="kix-smart-summary-view-separator">
+                </div>
+            </div>
+        </div>
+        <div class="navigation-widget-header navigation-widget-outline-header" style="padding-bottom:0px" role="heading">
+            Pages Linked to this page:
+        </div>
+        ${blockText_ListPrefix}
+            <!-- Add list of documents linked to this note: See List 2 -->
+            ${list2}
+        ${blockText_ListSuffix}
+        <div class="navigation-widget-header navigation-widget-outline-header" style="padding-bottom:0px" role="heading">
+            Pages Linked to same Note:
+        </div>
+        ${blockText_ListPrefix}
+            <!-- Add list of documents linked to this note: See List 3 -->
+            ${list3}
+       ${blockText_ListSuffix}
+        <div class="outlines-widget">
+        </div>
+`;
 
             const findBlock = document.getElementById('GDNTNotesContainer');
             var block;
@@ -395,17 +473,22 @@ Are you sure?`);
                 block = document.createElement('div');
                 block.setAttribute ('id', 'GDNTNotesContainer');
 
-                const parent = document.getElementsByClassName('left-sidebar-container')[0];
-                const child = parent.getElementsByClassName('left-sidebar-container-content')[0];
+                const left = document.getElementsByClassName('left-sidebar-container')[0];
+                const parent = left.getElementsByClassName('navigation-widget-content')[0];
+                const child = parent.getElementsByClassName('navigation-widget-smart-summary-container')[0];
 
                 parent.insertBefore(block, child);
+                block.style.padding = '0 0 50px 0';
             }
             else {
                 block = findBlock;
             }
 
-            block.innerHTML = blockText_P1 + list1 + blockText_P2 + list2 + blockText_P3 + list3 + blockText_P4;
-
+            block.innerHTML = blockText;
+            document.getElementById('gdnt-notes-edit').style.display = hasNote ? 'block' : 'none';
+            document.getElementById('gdnt-notes-add').style.display = hasNote ? 'none' : 'block';
+            document.getElementById('gdnt-notes-list-of-notes').style.display = hasNote ? 'none' : 'block';
+/*
             // Note: This function is called after these elements are loaded (see waitForKeyElements below)
             document.getElementById('GDNTNotesRefrButton').addEventListener('click', (event) => {UI.refreshNotesClick(event);});
             document.getElementById('GDNTNeedsNote').addEventListener('click', (event) => {UI.openNotesClick(event);});
@@ -419,7 +502,7 @@ Are you sure?`);
             for (const link of document.getElementsByClassName('DeletePageNote')) {
                 link.addEventListener('click', (event) => {UI.delPageNoteClick(event, link.getAttribute('value'));});
             }
-
+*/
         }
     };
     const resetItem = false;
@@ -434,7 +517,7 @@ Are you sure?`);
     // Wait for particular DOM elements to exist before starting up my code.
     // Basically the google docs page has to execute some code to add the different parts of the document.
     // This waits until those parts of the document exist then adds this UI into the middle of that.
-    waitForKeyElements('div.left-sidebar-container div.left-sidebar-container-content', () => {UI.addUI(currentPage);});
+    waitForKeyElements('div.left-sidebar-container div.navigation-widget-smart-summary-container', () => {UI.addUI(currentPage);});
 })();
 
 
