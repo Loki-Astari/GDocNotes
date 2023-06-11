@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google Docs Note Taker
 // @namespace    http://LokiAstari.com/
-// @version      0.6
+// @version      0.7
 // @description  Link a private google doc to any web page. Link multiple pages to a single note.
 // @author       Loki Astari
 // @match        https://docs.google.com/document/*
@@ -74,6 +74,10 @@
             return session.pages[page];
         },
         // Private
+        delPageNote: function(session, page) {
+            delete session.pages[page];
+        },
+        // Private
         getNotesInfo: function(session, note) {
             var find = session.notes.filter(obj => obj.page == note);
             if (find.length == 0) {
@@ -83,6 +87,10 @@
                 find = session.notes.filter(obj => obj.page == note);
             }
             return find[0];
+        },
+        // Private
+        delNoteInfo: function(session, note) {
+            session.notes = session.notes.filter(obj => obj.page != note);
         },
         // Private
         setPageNotesData: function(session, page, note) {
@@ -100,7 +108,7 @@
                 }
             }
             else {
-                delete session.pages[page];
+                this.delPageNote(session, page);
             }
         },
         // public
@@ -125,7 +133,7 @@
         },
         // Public
         // Uses session
-        notesPageLink: function(page) {
+        getPageNoteInfo: function(page) {
             return this.sessionStart((session) => {
                 const pageData = this.getPageNotes(session, page);
                 return [false, pageData.note];
@@ -137,10 +145,10 @@
             this.sessionStart((session) => {
                 const noteData = this.getNotesInfo(session, note);
                 for (const page of noteData.linkedPages) {
-                    delete session.pages[page.page];
+                    this.delPageNote(session, page);
                 }
 
-                session.notes = session.notes.filter(obj => obj.page != note);
+                this.delNoteInfo(session, note);
                 return true;
             });
         },
@@ -253,7 +261,7 @@ Are you sure?`);
                 this.addUI(currentPage);
                 return;
             }
-            window.open(Storage.notesPageLink(currentPage), '_blank');
+            window.open(Storage.getPageNoteInfo(currentPage), '_blank');
         },
         // Event Handler
         addNotesClick: function(event) {
