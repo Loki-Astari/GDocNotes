@@ -284,3 +284,9 @@ Are you sure?`);
         this.currentPage = page;
     }
 }
+
+if (typeof process !== 'undefined' && process.env['NODE_DEV'] == 'TEST') {
+    module.exports = UI;
+}
+
+

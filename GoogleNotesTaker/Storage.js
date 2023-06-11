@@ -117,3 +117,9 @@ class Storage {
         });
     }
 }
+
+if (typeof process !== 'undefined' && process.env['NODE_DEV'] == 'TEST') {
+    module.exports = Storage;
+}
+
+
