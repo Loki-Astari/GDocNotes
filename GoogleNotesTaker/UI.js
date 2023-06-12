@@ -230,6 +230,13 @@ Are you sure?`);
                 hasNote:             ${storageData.hasNote}
                 hasLabel:            ${storageData.hasLabel}
             `);
+/*
+        console.log(`Test Data:
+${JSON.stringify(storageData)}
+Result:
+${this.uiBuilder.build(storageData)}
+`);
+*/
 
         const block = this.getOrCreateRoot();
         block.innerHTML = this.uiBuilder.build(storageData);
