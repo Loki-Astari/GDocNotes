@@ -120,7 +120,7 @@ Are you sure?`);
         // And carefullt put it in the DOM.
         const block = document.createElement('div');
         block.setAttribute ('id', 'GDNTNotesContainer');
-        block.style.padding = '0 0 50px 0';
+        block.style.padding = '0 0 30px 0';
 
         // Note: buildUI() is only called after these elements
         //       have been created. So we don't need to check for existance.
