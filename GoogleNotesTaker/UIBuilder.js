@@ -28,6 +28,17 @@ class UIBuilder {
         `);
     }
 
+    /*
+        template<typename T>
+        buildList(vector<T>&                 list,
+                         function<string(T)>        cl,             // class name
+                         function<string(T)>        actiontt,       // Tool Tip
+                         function<string(T)>        deletett,       // Tool Tip for delete
+                         function<string(T)>        object,         // The object to be displayed.
+                         function<string(T)>        value           // The value attribute
+                        ) {
+        <div><div><div>${buildListElement}</div></div></div>
+    */
     buildLabelList(labelData) {
         var output = '';
         for (const label of labelData) {
@@ -38,20 +49,16 @@ class UIBuilder {
     }
 
     /*
-    template<typename T>
-        vector<T>&              list,           // list of objects.
-        string&                 cl,             // class name
-        function<string(T)>     actiontt,       // Tool Tip
-        function<string(T)>     deletett,       // Tool Tip for delete
-        function<string(T)>     object,         // The object to be displayed.
-        function<string(T)>     value           // The value attributea
-
-        Convert the list into a set of "navigation-item"
-        Basically it will generate this:
-            <div>
-                <div>object(linkPage)</div>     // Note the div's must be around the object value.
-            </div>
-            ... repeat for each item in the list.
+        template<typename T>
+        buildListElement(vector<T>&                 list,
+                         string                     cl,             // class name
+                         function<string(T)>        actiontt,       // Tool Tip
+                         function<string(T)>        deletett,       // Tool Tip for delete
+                         function<string(T)>        object,         // The object to be displayed.
+                         function<string(T)>        value           // The value attribute
+                        ) {
+        <div><div>${object}</div></div>
+        ... repeat for each item in list
     */
     buildListElement(list, cl, actiontt, deletett, object, value) {
         var output = '';
@@ -75,6 +82,25 @@ class UIBuilder {
         </div>`;
     }
 
+    /*
+        template<typename T>
+        buildLabels({
+            labelData[string...],           //  array of string
+            labelsList[                     // Array of objects.
+                                                An object is:
+                                                    "label" which we try and match against a value from labelData
+                                                    linkedPages: a list of pages that we will add
+            {
+                label,                      // name
+                linkedPages[{
+                    display,
+                    page,
+                }...]
+            }....]
+        }
+                        ) {
+        <div>${Header}</div>${buildListElement}
+    */
     buildLabels(storageData) {
         var output = '';
         for (const label of storageData.labelData) {
@@ -95,6 +121,23 @@ class UIBuilder {
         return output;
     }
 
+    /*
+        build({
+            noteData{
+                note            // The note paged.
+                display         // User displayable version of note (i.e. not URL)
+                linkedPages     // pages linked to the note page
+            },
+            pageNote{
+                linkedPages     // pages linked to this page.
+            },
+            labelData           // labels on this page
+
+
+            notesList,          // list of all notes
+            labelsList,         // list of all labels
+        })
+    */
     buildButton(id, cl, extra, containerClass) {
         return `
 <div id="${id}" role="button" class="goog-inline-block jfk-button jfk-button-standard ${cl}" ${extra} data-ol-has-click-handler="">
