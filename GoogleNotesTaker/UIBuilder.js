@@ -64,6 +64,17 @@ class UIBuilder {
         return output;
     }
 
+    buildList(list, cl, actiontt, deletett, object, value) {
+        return `
+        <div class="updating-navigation-item-list">
+            <div class="updating-navigation-item-list">
+                <div class="navigation-item-list goog-container" tabindex="0" style="user-select: none; padding-right: 15px;">
+                    ${this.buildListElement(list, cl, actiontt, deletett, object, value)}
+                </div>
+            </div>
+        </div>`;
+    }
+
     buildLabels(storageData) {
         var output = '';
         for (const label of storageData.labelData) {
@@ -84,15 +95,16 @@ class UIBuilder {
         return output;
     }
 
-    buildList(list, cl, actiontt, deletett, object, value) {
+    buildButton(id, cl, extra, containerClass) {
         return `
-        <div class="updating-navigation-item-list">
-            <div class="updating-navigation-item-list">
-                <div class="navigation-item-list goog-container" tabindex="0" style="user-select: none; padding-right: 15px;">
-                    ${this.buildListElement(list, cl, actiontt, deletett, object, value)}
-                </div>
-            </div>
-        </div>`;
+<div id="${id}" role="button" class="goog-inline-block jfk-button jfk-button-standard ${cl}" ${extra} data-ol-has-click-handler="">
+   <div class="docs-icon goog-inline-block ">
+       <div class="docs-icon-img-container ${containerClass}">
+           &nbsp;
+       </div>
+   </div>
+</div>
+`;
     }
 
     build(storageData) {
@@ -120,29 +132,11 @@ class UIBuilder {
                        Notes: <div class="navigation-item-content" style="display:inline"><a class="gdnt-anchor" href="${storageData.noteData.note}">${storageData.noteData.display}</a></div>
                    </div>
                    <!-- Edit Note -->
-                   <div id="gdnt-notes-edit" role="button" class="goog-inline-block jfk-button jfk-button-standard kix-smart-summary-edit-button" data-tooltip="Edit Notes" style="display: none;" data-ol-has-click-handler="">
-                       <div class="docs-icon goog-inline-block ">
-                           <div class="docs-icon-img-container docs-icon-img docs-icon-edit-outline">
-                               &nbsp;
-                           </div>
-                       </div>
-                   </div>
+                   ${this.buildButton('gdnt-notes-edit', 'kix-smart-summary-edit-button', 'data-tooltip="Edit Notes" style="display: none;"', 'docs-icon-img docs-icon-edit-outline')}
                    <!-- Add Note -->
                    <div id="gdnt-notes-add" class="kix-smart-summary-entrypoint-container kix-smart-summary-header-button" style="display: none;">
-                       <div role="button" class="goog-inline-block jfk-button jfk-button-standard kix-smart-summary-add-button-promo kix-smart-summary-entrypoint-icon" data-ol-has-click-handler="">
-                           <div class="docs-icon goog-inline-block ">
-                               <div class="docs-icon-img-container docs-smart-summary-tinted docs-icon-img docs-icon-smart-summary">
-                                   &nbsp;
-                               </div>
-                           </div>
-                       </div>
-                       <div role="button" class="goog-inline-block jfk-button jfk-button-standard kix-smart-summary-add-button-default kix-smart-summary-entrypoint-icon" style="position: relative;" tabindex="0" data-tooltip-class="kix-default-tooltip" data-tooltip-offset="0" data-tooltip="Add Notes" data-ol-has-click-handler="">
-                           <div class="docs-icon goog-inline-block ">
-                               <div class="docs-icon-img-container docs-icon-img docs-icon-plus">
-                                   &nbsp;
-                               </div>
-                           </div>
-                       </div>
+                       ${this.buildButton('gdnt-notes-add1', 'kix-smart-summary-add-button-promo kix-smart-summary-entrypoint-icon', '', 'docs-smart-summary-tinted docs-icon-img docs-icon-smart-summary')}
+                       ${this.buildButton('gdnt-notes-add2', 'kix-smart-summary-add-button-default kix-smart-summary-entrypoint-icon', 'style="position: relative;" tabindex="0" data-tooltip-class="kix-default-tooltip" data-tooltip-offset="0" data-tooltip="Add Notes"', 'docs-icon-img docs-icon-plus')}
                    </div>
                </div>
            </div>
@@ -153,20 +147,8 @@ class UIBuilder {
                    </div>
                    <!-- Add Label -->
                    <div id="gdnt-labels-add" class="kix-smart-summary-entrypoint-container kix-smart-summary-header-button" style="display: block;">
-                       <div role="button" class="goog-inline-block jfk-button jfk-button-standard kix-smart-summary-add-button-promo kix-smart-summary-entrypoint-icon" data-ol-has-click-handler="">
-                           <div class="docs-icon goog-inline-block ">
-                               <div class="docs-icon-img-container docs-smart-summary-tinted docs-icon-img docs-icon-smart-summary">
-                                   &nbsp;
-                               </div>
-                           </div>
-                       </div>
-                       <div role="button" class="goog-inline-block jfk-button jfk-button-standard kix-smart-summary-add-button-default kix-smart-summary-entrypoint-icon" style="position: relative;" tabindex="0" data-tooltip-class="kix-default-tooltip" data-tooltip-offset="0" data-tooltip="Add Labels" data-ol-has-click-handler="">
-                           <div class="docs-icon goog-inline-block ">
-                               <div class="docs-icon-img-container docs-icon-img docs-icon-plus">
-                                   &nbsp;
-                               </div>
-                           </div>
-                       </div>
+                       ${this.buildButton('gdnt-label-add1', 'kix-smart-summary-add-button-promo kix-smart-summary-entrypoint-icon', '', 'docs-smart-summary-tinted docs-icon-img docs-icon-smart-summary')}
+                       ${this.buildButton('gdnt-label-add2', 'kix-smart-summary-add-button-default kix-smart-summary-entrypoint-icon', 'style="position: relative;" tabindex="0" data-tooltip-class="kix-default-tooltip" data-tooltip-offset="0" data-tooltip="Add Labels"', 'docs-icon-img docs-icon-plus')}
                    </div>
                </div>
            </div>
