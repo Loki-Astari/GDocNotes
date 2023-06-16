@@ -10,7 +10,7 @@ test('PageInfo: First Test', () => {
 test('PageInfo: Construct Label', () => {
     const page = new PageInfo('One');
     expect(page.url).toBe('One');
-    expect(page.display).toBe('');
+    expect(page.display).toBe('Not Google Doc');
     expect(page.noteUrl).toBe('');
     expect(Array.from(page.labels)).toStrictEqual([]);
     expect(Array.from(page.linkedPages)).toStrictEqual([]);

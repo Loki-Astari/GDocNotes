@@ -1,31 +1,6 @@
 class UIBuilder {
 
     constructor() {
-        GM_addStyle ( `
-            div.gdnt-note {
-                color: green;
-            }
-            a.gdnt-anchor {
-                color: inherit;
-                text-decoration: none;
-            }
-            a.gdnt-anchor:hover {
-                color:#0B57D0;
-                text-decoration:none;
-                cursor:pointer;
-            }
-            .navigation-widget .updating-navigation-item-list .navigation-item-list .last_child_override {
-                margin-bottom:  0;
-                font-size:      11px;
-                line-height:    28px;
-            }
-            .navigation-widget .updating-navigation-item-list .navigation-item-list .gdnt-note .navigation-item-level-1 {
-                padding-left: 0px;
-            }
-            .navigation-widget .updating-navigation-item-list .navigation-item-list .gdnt-label .navigation-item-level-1 {
-                padding-left: 0px;
-            }
-        `);
     }
 
     /*
@@ -83,22 +58,27 @@ class UIBuilder {
     }
 
     // See Data.js
-    buildLabels(data) {
+    buildLabels(data, page) {
         var output = '';
-        for (const label of data.labels) {
+        const pageData = data.getPage(page);
+        for (const label of pageData.labels) {
             const labelInfo = data.getLabel(label);
             output += `
 <div class="navigation-widget-header navigation-widget-outline-header" style="padding-bottom:0px" role="heading">
     Pages Labeled: ${label}
 </div>`;
-            if (labelInfo.length) {
                 output += this.buildList(labelInfo,
                                          'gdnt-label-page',
                                          (page)=>`Open: ${data.getPage(page).display}`,
                                          (page)=>`Remove '${label}' from Page: ${data.getPage(page).display}`,
                                          (page)=>`<a class="gdnt-anchor" href="${data.getPage(page).url}">${data.getPage(page).display}</a>`,
                                          (page)=>`${label}:${data.getPage(page).url}`);
-            }
+        }
+        if (output == '') {
+            output += `
+<div class="navigation-widget-header navigation-widget-outline-header" style="padding-bottom:0px" role="heading">
+    No Labels on this page.
+</div>`;
         }
         return output;
     }
@@ -164,7 +144,7 @@ class UIBuilder {
                </div>
            </div>
            <div class="docs-material kix-smart-summary-view" style="padding-bottom:0px">
-               <div id="gdnt-notes-list-of-notes" class="kix-smart-summary-view-content-container" style="display: none;">
+               <div id="gdnt-notes-list-of-notes" class="kix-smart-summary-view-content-container gdnt-compress" style="display: none;">
                    <div class="navigation-widget-header navigation-widget-outline-header" style="padding:0;" role="heading">
                        Existing Notes Documents:
                    </div>
@@ -172,7 +152,7 @@ class UIBuilder {
                    <!-- <div class="kix-smart-summary-view-separator">
                    </div> -->
                </div>
-               <div id="gdnt-labels-list-of-labels" class="kix-smart-summary-view-content-container" style="display: block;">
+               <div id="gdnt-labels-list-of-labels" class="kix-smart-summary-view-content-container gdnt-compress" style="display: block;">
                    <div class="navigation-widget-header navigation-widget-outline-header" style="padding:0;" role="heading">
                        Existing Labels :
                    </div>
@@ -189,7 +169,7 @@ class UIBuilder {
                Pages Linked to same note:
            </div>
            ${this.buildList(noteData.linkedPages, 'gdnt-note-page', (page)=>`Open: ${data.getPage(page).display}`, (page)=>`Remove Page: ${data.getPage(page).display}`, (page)=>`<a class="gdnt-anchor" href="${data.getPage(page).url}">${data.getPage(page).display}</a>`, (page)=>data.getPage(page).url)}
-           ${this.buildLabels(data)}
+           ${this.buildLabels(data, page)}
        </div>`;
     }
 }

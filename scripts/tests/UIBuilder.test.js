@@ -89,9 +89,9 @@ test('UIBuilder: First Test', () => {
  * =============
  */
 test('UIBuilder: Construct Object', () => {
-    expect(GM_addStyle).not.toHaveBeenCalled();
+    //expect(GM_addStyle).not.toHaveBeenCalled();
     expect(new UIBuilder()).not.toBeNull();
-    expect(GM_addStyle).toHaveBeenCalled();
+    //expect(GM_addStyle).toHaveBeenCalled();
 });
 
 /*
@@ -216,21 +216,19 @@ test('UIBuilder: buildLabels Empty', () => {
 
     const data = new Data({version:2 ,pages: {}, labels: {}, notes: []});
     const htmlText = uiBuilder.buildLabels(data);
-    expect(htmlText).toBe('');
+    expect(strip(htmlText)).toBe('<div>No Labels on this page.</div>');
 });
 test('UIBuilder: buildLabels Two Items', () => {
     uiBuilder = new UIBuilder();
     
     const data = new Data({version:2 ,pages: {}, labels: {Red: [], Blue: []}, notes: []});
-    const htmlText = uiBuilder.buildLabels(data);
+    const htmlText = uiBuilder.buildLabels(data, "");
     const textNodes = findTextNodes(htmlText);
     // The first tag should have a class the contains 'x1'
-    expect(textNodes.length).toBe(5);
+    expect(textNodes.length).toBe(3);
     expect(textNodes[0]).toBe('');                              // between ^ <div>
-    expect(textNodes[1]).toBe('    Pages Labeled: Red');        // between <div> </div> */
-    expect(textNodes[2].replace(/[ \t]*/, '')).toBe('');        // between </div> <div>
-    expect(textNodes[3]).toBe('    Pages Labeled: Blue');       // between <div> </div>
-    expect(textNodes[4]).toBe('');                              // between </div> $
+    expect(textNodes[1]).toBe('    No Labels on this page.');   // between <div> </div>
+    expect(textNodes[2]).toBe('');                              // between </div> $
 });
 test('UIBuilder: buildLabels Two Items', () => {
     uiBuilder = new UIBuilder();

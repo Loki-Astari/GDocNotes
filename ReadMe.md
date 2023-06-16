@@ -3,21 +3,42 @@
 Two things to note:
 
 1. I am C++ engineer not Java (so be kind).
-2. I am backend mostly but here is some frontend stuff.   
+2. I am back-end mostly but here is some front-end stuff.
    I will take any hints on how to make the UI better (currently its functional).
 
 ### Google Docs Note Taker.
 
 Purpose: I find google docs hard to organize in google drive (it takes more effort than it should).
 
-So I started created "note" documents. A "note" document has links to all documents related to a particular subject and some notes about the combined documents. Note: Note all the documents are mine so I can just modify the original documents (hence the separate notes document).
+So I started creating a "note" documents. A "note" document has links to all documents related to a particular subject and some notes about the combined documents.
 
-The other day I though I could automate some of this processes with a tampermonkey script. The script adds a section <div id="GDNTNotesContainer"> to the left bar of a google doc page with information and links there.
+Note: Note all the documents are mine so I can't just modify the original documents (hence the separate notes document).
+
+The other day I though I could automate some of this processes with a tampermonkey script. It has now evolved past that to a chrome extension. With some rudimentary Unit-Tests. Once I had the basic script for the notes document working it became easy to add the concept of "labels". So you can now add multiple labels to a document.
+
+### What it does:
+
+The script adds a section <div id="GDNTNotesContainer"> to the left bar of a google doc page.
+
+This div contains two sections:
+
+#### Notes Section:
+
+This section shows if a note document has been linked and a list of labels that have been applied to the document. To the right of these are "+" icons that allow you to manually add a note document or a label. For convenience below this are a list of known labels (labels you have applied to other documents) and if there is no linked note document a list of known note documents (note documents that have been linked to other documents). These are for convenience to allow you to quickly add known labels / note documents to this document.
+
+#### Link Section:
+
+This section lists all linked documents. If this is a note document it will list all documents linked to this document. If this document has a linked note document it will list all documents linked to the note. For each label applied to this document it will list the label and all documents with the same label.
+
+
 
 #### Instructions on Usage:
-When you first start you have no linked notes documents. So the left bar has "Add Note" button. Pressing this pops up a dialog asking for a link to notes document (no checking is done that it is a link. At the moment I am thinking this is a feature as I can use this to create associateions without an actual notes document, but that part needs work so please just test using notes documents, i'll work on more uses later).
 
-Once you have a linked a notes document you should the interface change to have two things: 1) An "Open Notes:" button whick opens the notes document, 2) A list of pages that also use the same notes document (Currently just this document).
+Note: The left side bar is usually hidden. So by default you will not see the new sections. To see them open the left side bar by clicking on the "Note" icon in the top left corner of the document window.
 
-If you now go to another google document (another that has not been linked) you will see the "Add Note" button but also the previous note document you just added. So you can easily associate other pages with known notes documents without looking them up.
+
+When you first start you have no linked notes documents. So the left bar has "Notes:" and "Labels:" section with a "+" icon to the right of each. Pressing the "+" pops up a dialog asking for a link to notes document (no checking is done that it is a link (so you can add any string here) or a label. For the note I recommend adding a link to a google document, for the labels feel free to add appropriate labels to the document.
+
+Once you have added a linked a notes document you should the interface change to show the linked document (the icon changes to an edit button) and the labels section contains a list of lables attached to the document. The "Link" section will also update to show this pages in each of the sections as appropriate.
+
 

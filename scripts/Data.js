@@ -41,15 +41,24 @@ class DataImpl {
         this.#labels    = rawData.labels;
         this.#notes     = rawData.notes;
     }
+    #getOrInsertPage(page)      {if (this.#pages[page] === undefined) {this.#pages[page] = new PageInfo(page);} return this.#pages[page];}
 
-    getPage(page)               {return this.#pages[page] !== undefined ? this.#pages[page] : new PageInfo(page);}
-    getLabel(label)             {return this.#labels[label] !== undefined ? this.#labels[label].entries() : [].entries();}
+    getPage(page)               {return this.#pages[page] !== undefined ? this.#pages[page] : new PageInfo({url:page});}
+    getLabel(label)             {return this.#labels[label] !== undefined ? this.#labels[label].values() : [].entries();}
 
     get version()               {return this.#version;}
     get labels()                {return Object.keys(this.#labels).values();}
     get notes()                 {return this.#notes.values();}
 
-    toJSON()                    {return {version:this.#version, pages:this.#pages, labels:this.#labels, notes:this.#notes};}
+    toJSON() {
+        const p = this.#pages;
+        return {
+            version: this.#version,
+            pages: Object.keys(p).filter(key => !p[key].empty).reduce( (res, key) => (res[key] = p[key], res), {}),
+            labels: this.#labels,
+            notes: this.#notes
+        };
+    }
 
     setDisplay(page, display)   {
         const oldPage = this.#pages[page];
@@ -59,10 +68,7 @@ class DataImpl {
         this.#pages[page] = PageInfo.duplicateWithReplace(oldPage, {display: display});
     }
     setNote(page, note) {
-        const oldPage = this.#pages[page];
-        if (!oldPage) {
-            return;
-        }
+        const oldPage = this.#getOrInsertPage(page);
         const oldNote = oldPage.noteUrl;
         if (note == oldNote) {
             return;
@@ -78,25 +84,19 @@ class DataImpl {
 
         if (note != '') {
             if (!(note in this.#pages)) {
-                // TODO Need to update display
-                this.#pages[note] = new PageInfo({url: note, linkedPages: [page]});
+                this.#pages[note] = new PageInfo(note);
             }
-            else {
-                const newNotePage = this.#pages[note];
-                const linkedPages = Array.from(newNotePage.linkedPages);
-                linkedPages.push(page);
-                this.#pages[newNotePage] = PageInfo.duplicateWithReplace(newNotePage, {linkedPages: linkedPages});
-            }
+            const newNotePage = this.#pages[note];
+            const linkedPages = Array.from(newNotePage.linkedPages);
+            linkedPages.push(page);
+            this.#pages[note] = PageInfo.duplicateWithReplace(newNotePage, {linkedPages: linkedPages});
         }
     }
     addLabel(page, label) {
         if (!label) {
             return;
         }
-        const oldPage = this.#pages[page];
-        if (!oldPage) {
-            return;
-        }
+        const oldPage = this.#getOrInsertPage(page);
         const labels = [];
         for (const obj of oldPage.labels) {
             if (obj == label) {

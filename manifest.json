@@ -1,0 +1,39 @@
+{
+    "manifest_version": 3,
+    "name": "Google Notes Taker Chrome Extension",
+    "description": "Add a section to the left bar of google document that allows you to add notes and labels to chrome documents and see other documents with the same labels and notes",
+    "version": "1.0",
+    "action": {
+        "default_icon": "images/GDNT.256.png"
+    },
+     "icons": {
+        "16": "images/GDNT.16.png",
+        "32": "images/GDNT.32.png",
+        "48": "images/GDNT.48.png",
+        "128": "images/GDNT.128.png",
+        "256": "images/GDNT.256.png"
+    },
+    "content_scripts": [
+        {
+            "type": "module",
+            "matches": [
+                "https://docs.google.com/document/*"
+            ],
+            "js": [
+                "third/jquery.1.7.2.js",
+                "third/WaitForKeyElements.js",
+                "scripts/Util.js",
+                "scripts/Converter.js",
+                "scripts/Storage.js",
+                "scripts/Data.js",
+                "scripts/PageInfo.js",
+                "scripts/UIBuilder.js",
+                "scripts/UI.js",
+                "scripts/GoogleNotesTaker.js"
+            ],
+            "css": [
+                "style/GDNT.css"
+            ]
+        }
+    ]
+}

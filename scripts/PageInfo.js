@@ -10,14 +10,31 @@ class PageInfo {
     get noteUrl()       {return this.#noteUrl;}
     get labels()        {return this.#labels.values();}
     get linkedPages()   {return this.#linkedPages.values();}
+    get empty() {
+        return this.#linkedPages.length == 0 && this.#labels.length == 0 && this.#noteUrl == '';
+    }
 
     constructor(value) {
         if (typeof value === 'string') {
             this.#url           = value;
-            this.#display       = '';
+            this.#display       = 'Not Google Doc';
             this.#noteUrl       = '';
             this.#labels        = [];
             this.#linkedPages   = [];
+            const page = this;
+            if (value.startsWith('https://docs.google.com/document/d/')) {
+                $.ajax({
+                    method: 'HEAD',
+                    url: value,
+                    async: false,
+                    success: function(pageHead) {
+                        const title = Util.cleanTitle($(pageHead).filter('title').text());
+                        if (title) {
+                            page.#display = title;
+                        }
+                    }
+                });
+            }
         }
         else {
             this.#url           = value.url         || '';
