@@ -13,9 +13,24 @@
 // @sandbox      JavaScript
 // @require      http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js#sha384=Q96qXpLdPU1SBEdvTZkaSZfHRsUwS+sj/WFUdmYvGhBNtwYUucjuwhZT6glwdVXk%
+// @require      https://raw.githubusercontent.com/Loki-Astari/TampermonkeyScripts/master/GoogleNotesTaker/Util.js#sha384=TRKVtP91j4B5qAQFBUwb487cX87yTUMBuPkjYt7S+AKCDX4O0s/b/lppq9C59RUq%
+// @require      https://raw.githubusercontent.com/Loki-Astari/TampermonkeyScripts/master/GoogleNotesTaker/StorageInterface.js#sha384=TRKVtP91j4B5qAQFBUwb487cX87yTUMBuPkjYt7S+AKCDX4O0s/b/lppq9C59RUq%
+// @require      https://raw.githubusercontent.com/Loki-Astari/TampermonkeyScripts/master/GoogleNotesTaker/Storage.js#sha384=TRKVtP91j4B5qAQFBUwb487cX87yTUMBuPkjYt7S+AKCDX4O0s/b/lppq9C59RUq%
+// @require      https://raw.githubusercontent.com/Loki-Astari/TampermonkeyScripts/master/GoogleNotesTaker/UIBuilder.js#sha384=TRKVtP91j4B5qAQFBUwb487cX87yTUMBuPkjYt7S+AKCDX4O0s/b/lppq9C59RUq%
 // @require      https://raw.githubusercontent.com/Loki-Astari/TampermonkeyScripts/master/GoogleNotesTaker/UI.js#sha384=TRKVtP91j4B5qAQFBUwb487cX87yTUMBuPkjYt7S+AKCDX4O0s/b/lppq9C59RUq%
 // ==/UserScript==
 
 (function() {
-     GoogleDocsNoteTaker();
+    const storage = new Storage();
+
+    const uiBuilder = new UIBuilder();
+
+    const ui = new UI(storage, uiBuilder, Util.cleanUrl(window.location.href));
+
+    // Wait for particular DOM elements to exist before starting up my code.
+    // Basically the google docs page has to execute some code to add the different parts of the document.
+    // This waits until those parts of the document exist then adds this UI into the middle of that.
+
+    waitForKeyElements('div.left-sidebar-container div.navigation-widget-smart-summary-container', () => {ui.createUI();});
+
 })();
