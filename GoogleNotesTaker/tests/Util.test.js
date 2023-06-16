@@ -1,14 +1,21 @@
 
-var Util = null;
 beforeAll(async () => {
     process.env['NODE_DEV'] = 'TEST';
-    Util = require("../Util.js");
+    global.Util = require('../Util.js');
 });
 
 
-test("Util: First Test", () => {
+test('Util: First Test', () => {
     expect(true).toBe(true);
 });
+test('Util: filter', () => {
+    const data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const values = data.values();
+    const filteredValues = Util.filter(values, (val) => val % 2 == 0);
+    const result = Array.from(filteredValues);
+    expect(result).toStrictEqual([0, 2, 4, 6, 8]);
+});
+
 
 const testData = {
     url: {
@@ -25,38 +32,39 @@ const testData = {
     }
 };
 
-test("Util: cleanUrl Normal", () => {
+test('Util: cleanUrl Normal', () => {
 
     expect(Util.cleanUrl(testData.url.standard)).toBe(testData.url.standard);
 });
-test("Util: cleanUrl Args", () => {
+test('Util: cleanUrl Args', () => {
 
     expect(Util.cleanUrl(testData.url.args)).toBe(testData.url.standard);
 });
-test("Util: cleanUrl Invalid (but common) Args", () => {
+test('Util: cleanUrl Invalid (but common) Args', () => {
 
     expect(Util.cleanUrl(testData.url.invalidArgs)).toBe(testData.url.standard);
 });
-test("Util: cleanUrl Fragment Only", () => {
+test('Util: cleanUrl Fragment Only', () => {
 
     expect(Util.cleanUrl(testData.url.fragment)).toBe(testData.url.standard);
 });
-test("Util: cleanUrl Args & Fragment", () => {
+test('Util: cleanUrl Args & Fragment', () => {
 
     expect(Util.cleanUrl(testData.url.argsfragment)).toBe(testData.url.standard);
 });
-test("Util: cleanUrl Invalid Args & Fragment", () => {
+test('Util: cleanUrl Invalid Args & Fragment', () => {
 
     expect(Util.cleanUrl(testData.url.argsInvfragment)).toBe(testData.url.standard);
 });
 
 
-test("Util: cleanTitle Simple", () => {
+test('Util: cleanTitle Simple', () => {
 
     expect(Util.cleanTitle(testData.title.simple)).toBe(testData.title.simple);
 });
-test("Util: cleanTitle Google", () => {
+test('Util: cleanTitle Google', () => {
 
     expect(Util.cleanTitle(testData.title.google)).toBe(testData.title.simple);
 });
+
 

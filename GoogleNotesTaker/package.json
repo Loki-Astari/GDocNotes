@@ -2,9 +2,9 @@
   "dependencies": {
     "selenium-webdriver": "^4.10.0"
   },
-  "name": "googlenotestaker",
-  "version": "1.0.0",
-  "main": "Storage.js",
+  "name": "googlenotestaker2",
+  "version": "2.1.0",
+  "main": "Data.js",
   "directories": {
     "test": "tests"
   },
@@ -12,10 +12,10 @@
     "jest": "^29.5.0"
   },
   "scripts": {
-    "test": "jest --verbose ./tests"
+    "test": "jest --no-cache --verbose ./tests"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "description": ""
 }

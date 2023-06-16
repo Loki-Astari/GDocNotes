@@ -1,82 +1,84 @@
 class UI {
 
     // Init and refresh the UI.
-    storage = null;
-    uiBuilder = null;
-    currentPage = null;
-    mouseOverDeletable = null;
-    pageDirty = false;
+    #storage;
+    #uiBuilder;
+    #currentPage;
+    #mouseOverDeletable;
+    #pageDirty;
 
-    // Private
-    saveNotePage(note) {
-        if (note == this.currentPage) {
+    #addNotes(notes) {
+        // Can't set a page to be its own Note.
+        if (note == this.#currentPage) {
             return null;
         }
-        this.storage.setPageNotes(this.currentPage, note);
-        $.ajax({
-            method: 'HEAD',
-            url: note,
-            success: function(pageHead) {
-                const title = Util.cleanTitle($(pageHead).filter('title').text());
-                if (title) {
-                    this.storage.fixSavedData(note, title);
+        this.#storage.startSession((session) => {
+            session.setNote(this.#currentPage, note);
+            $.ajax({
+                method: 'HEAD',
+                url: note,
+                async: false,
+                success: function(pageHead) {
+                    const title = Util.cleanTitle($(pageHead).filter('title').text());
+                    if (title) {
+                        session.setDisplay(note, title);
+                    }
                 }
-            }
+            });
+            return true;
         });
-        return note;
-    }
-
-    // Private
-    addNotes(notes) {
-        this.saveNotePage(Util.cleanUrl(notes));
         this.addUI();
     }
 
     // Private
     addLabel(label) {
-        if (label == '') {
-            return;
-        }
-        this.storage.setPageLabels(this.currentPage, label);
+        this.#storage.startSession((session) => {
+            session.addLabel(this.#currentPage, label);
+            return true;
+        });
+        this.addUI();
     }
 
     // Event Handler
     delPageNoteClick(event, page) {
-        var dirty = false;
-        if (this.mouseOverDeletable.classList.contains('gdnt-note-page')) {
-            this.storage.setPageNotes(page, '');
-            dirty = true;
-        }
-        else if (this.mouseOverDeletable.classList.contains('gdnt-label-page')) {
-            this.storage.sessionStart((session) => {
+        const over = this.#mouseOverDeletable;
+        const dirty = this.#storage.startSession((session) => {
+            var dirty = false;
+            if (over.classList.contains('gdnt-note-page')) {
+                session.setNote(page, '');
+                dirty = true;
+            }
+            else if (over.classList.contains('gdnt-label-page')) {
                 const split = page.split(/:(https.*)/s);
                 const realPage = split[1];
                 const label = split[0];
-                const pageLabelData = session.getPageLabelInfo(realPage);
-                const newPageLabel = pageLabelData.filter(obj => obj != label);
-                session.setPageLabelsData(realPage, newPageLabel);
-                return true;
-            });
-            dirty = true;
-        }
-        else if (this.mouseOverDeletable.classList.contains('gdnt-note')) {
-            const confirmDelete = confirm(`
-Deleting a Note will delete all linking pages from the internal DB.
-Are you sure?`);
-            if (confirmDelete) {
-                this.storage.delNote(page);
+                session.remLabel(realPage, label);
                 dirty = true;
             }
-        }
-        else if (this.mouseOverDeletable.classList.contains('gdnt-label')) {
-            const confirmDelete = confirm(`
-Deleting a Label will delete all linking pages from the internal DB.
-Are you sure?`);
-            if (confirmDelete) {
-                this.storage.delLabel(page);
-                dirty = true;
+            else if (over.classList.contains('gdnt-note')) {
+                const confirmDelete = confirm(`
+Deleting     a Note will delete all linking pages from the internal DB.
+Are you     sure?`);
+                if (confirmDelete) {
+                    session.deleteNote(page);
+                    dirty = true;
+                }
             }
-        }
+            else if (over.classList.contains('gdnt-label')) {
+                const confirmDelete = confirm(`
+Deleting     a Label will delete all linking pages from the internal DB.
+Are you     sure?`);
+                if (confirmDelete) {
+                    session.deleteLabel(page);
+                    dirty = true;
+                }
+            }
+            // The first element decides if changes should be saved.
+            // So only save if it is dirty.
+            // The second element is returned as the result of startSession
+            // So we can use it below to re-build the UI.
+            return [dirty, dirty];
+        });
 
         if (dirty) {
             this.addUI();
@@ -85,7 +87,7 @@ Are you sure?`);
 
     // Event Handler
     addNotesClick(event, page) {
-        this.addNotes(prompt('URL of NotePage: ', page));
+        this.#addNotes(prompt('URL of NotePage: ', page));
     }
 
     // Event Handler
@@ -95,17 +97,12 @@ Are you sure?`);
 
     // Event Handler
     addNotesClickPageClick(event, notes) {
-        this.addNotes(notes);
+        this.#addNotes(notes);
     }
 
     // Event Handler
     addLabelClickPageClick(event, label) {
         this.addLabel(label);
-    }
-
-    // Event Handler
-    refreshNotesClickfunction(event) {
-        this.addUI();
     }
 
     getOrCreateRoot() {
@@ -144,21 +141,21 @@ Are you sure?`);
         // Make sure we always point mouseOverDeletable at the outer of the two sectiots of the deleteable.
         // See: uiBuilder.buildListElements()
         const newOver = (event.target.classList.contains('gdnt-deletable-inner')) ? event.target.parentNode : event.target;
-        if (this.mouseOverDeletable != newOver) {
-            this.mouseOverDeletable = newOver;
-            this.mouseOverDeletable.classList.add('goog-button-hover');
-            this.mouseOverDeletable.style.paddingRight = '37px';
-            this.mouseOverDeletable.children[0].setAttribute('data-tooltip-offset', '-37');
+        if (this.#mouseOverDeletable != newOver) {
+            this.#mouseOverDeletable = newOver;
+            this.#mouseOverDeletable.classList.add('goog-button-hover');
+            this.#mouseOverDeletable.style.paddingRight = '37px';
+            this.#mouseOverDeletable.children[0].setAttribute('data-tooltip-offset', '-37');
         }
 
         // Make sure the delete button is visable and scrolled to the correct location.
-        //const top = this.mouseOverDeletable.getBoundingClientRect().top + window.scrollY - 47 - document.getElementById('kix-horizontal-ruler-container').offsetHeight - document.getElementById('docs-chrome').offsetHeight + document.getElementsByClassName('navigation-widget-content')[0].scrollTop;
-        const top = this.mouseOverDeletable.getBoundingClientRect().top + window.scrollY - document.getElementsByClassName('left-sidebar-container-content')[0].getBoundingClientRect().top - 49 + document.getElementsByClassName('navigation-widget-content')[0].scrollTop;
+        //const top = this.#mouseOverDeletable.getBoundingClientRect().top + window.scrollY - 47 - document.getElementById('kix-horizontal-ruler-container').offsetHeight - document.getElementById('docs-chrome').offsetHeight + document.getElementsByClassName('navigation-widget-content')[0].scrollTop;
+        const top = this.#mouseOverDeletable.getBoundingClientRect().top + window.scrollY - document.getElementsByClassName('left-sidebar-container-content')[0].getBoundingClientRect().top - 49 + document.getElementsByClassName('navigation-widget-content')[0].scrollTop;
         const cross = document.getElementById('gdnt-delete-item');
         cross.style.top = `${top}px`;
         cross.style.display = 'block';
-        const removeToolTip = this.mouseOverDeletable.getAttribute('data-deletable-tt');
-        const name = this.mouseOverDeletable.children[0].getAttribute('data-tooltip');
+        const removeToolTip = this.#mouseOverDeletable.getAttribute('data-deletable-tt');
+        const name = this.#mouseOverDeletable.children[0].getAttribute('data-tooltip');
         cross.setAttribute('data-tooltip', removeToolTip);
         cross.children[0].setAttribute('data-tooltip', removeToolTip);
     }
@@ -181,7 +178,7 @@ Are you sure?`);
             // If this is not the deletable we were previuously over then we need to reset the previous element
             // to its original state.
             const newOver = (event.relatedTarget.classList.contains('gdnt-deletable-inner')) ? event.relatedTarget.parentNode : event.relatedTarget;
-            if (newOver != this.mouseOverDeletable) {
+            if (newOver != this.#mouseOverDeletable) {
                 resetCurrentMouseOver = true;
             }
         }
@@ -189,16 +186,16 @@ Are you sure?`);
             // If we are leaving the deletable that is currently active
             // Note: we have taken care of moving to over the delete button.
             // Then we need to reset the state of the deletable.
-            if (event.target == this.mouseOverDeletable) {
+            if (event.target == this.#mouseOverDeletable) {
                 resetCurrentMouseOver = true;
             }
         }
 
-        if (resetCurrentMouseOver && this.mouseOverDeletable) {
-            this.mouseOverDeletable.classList.remove('goog-button-hover');
-            this.mouseOverDeletable.style.paddingRight = '8px';
-            this.mouseOverDeletable.children[0].setAttribute('data-tooltip-offset', '-8');
-            this.mouseOverDeletable = null;
+        if (resetCurrentMouseOver && this.#mouseOverDeletable) {
+            this.#mouseOverDeletable.classList.remove('goog-button-hover');
+            this.#mouseOverDeletable.style.paddingRight = '8px';
+            this.#mouseOverDeletable.children[0].setAttribute('data-tooltip-offset', '-8');
+            this.#mouseOverDeletable = null;
         }
 
         // Hide the delete button only if
@@ -209,45 +206,25 @@ Are you sure?`);
     }
 
     addUI() {
-        const storageData = this.storage.sessionStart((session) => {
-            const pageData = session.getPageData(this.currentPage);
-            const pageNote = session.findNoteInfo(this.currentPage);
-            const noteData = session.getPageNoteInfo(this.currentPage);
-            const labelData = session.getPageLabelInfo(this.currentPage);
-            const notesList = session.getListAllNotes();
-            const labelsList = session.getListAllLabels();
-            return [false, {hasNote: pageData.note != '', hasLabel: pageData.labels.length == 0, pageData: pageData, pageNote: pageNote, noteData: noteData, labelData: labelData, notesList: notesList, labelsList: labelsList}];
+        const storageData = this.#storage.sessionStart((session) => {
+            return [false, session];
         });
 
-        console.log(`
-                pageData:            ${JSON.stringify(storageData.pageData)}
-                pageNote.isNote:     ${storageData.pageNote.linkedPages.length ? true : false}
-                pagesOnNoteList:     ${storageData.noteData.linkedPages.length}
-                notesList:           ${storageData.notesList.length}
-                labelsList:          ${storageData.labelsList.length}
-                pageNote.linkedPages:${storageData.pageNote.linkedPages.length}
-                noteData.likkedPages:${storageData.noteData.linkedPages.length}
-                hasNote:             ${storageData.hasNote}
-                hasLabel:            ${storageData.hasLabel}
-            `);
-/*
-        console.log(`Test Data:
-${JSON.stringify(storageData)}
-Result:
-${this.uiBuilder.build(storageData)}
-`);
-*/
+        console.log(JSON.stringify(storageData, null, 4));
 
         const block = this.getOrCreateRoot();
-        block.innerHTML = this.uiBuilder.build(storageData);
+        block.innerHTML = this.#uiBuilder.build(storageData, this.#currentPage);
 
-        document.getElementById('gdnt-notes-edit').style.display = storageData.hasNote ? 'block' : 'none';
-        document.getElementById('gdnt-notes-add').style.display = storageData.hasNote ? 'none' : 'block';
-        document.getElementById('gdnt-notes-list-of-notes').style.display = storageData.hasNote ? 'none' : 'block';
-        document.getElementById('gdnt-notes-edit').addEventListener('click', (event) => {this.addNotesClick(event, storageData.noteData.note);});
+        const page = storageData.getPage(this.#currentPage);
+        const hasNote = page.noteURL != '';
+
+        document.getElementById('gdnt-notes-edit').style.display = hasNote ? 'block' : 'none';
+        document.getElementById('gdnt-notes-add').style.display = hasNote ? 'none' : 'block';
+        document.getElementById('gdnt-notes-list-of-notes').style.display = hasNote ? 'none' : 'block';
+        document.getElementById('gdnt-notes-edit').addEventListener('click', (event) => {this.addNotesClick(event, page.noteUrl);});
         document.getElementById('gdnt-notes-add').addEventListener('click', (event) => {this.addNotesClick(event, 'https://docs.google.com/document/d/');});
         document.getElementById('gdnt-labels-add').addEventListener('click', (event) => {this.addLabelClick(event);});
-        document.getElementById('gdnt-delete-item').addEventListener('click', (event) => {this.delPageNoteClick(event, this.mouseOverDeletable.getAttribute('value'));});
+        document.getElementById('gdnt-delete-item').addEventListener('click', (event) => {this.delPageNoteClick(event, this.#mouseOverDeletable.getAttribute('value'));});
         for (const link of document.getElementsByClassName('gdnt-deletable')) {
             link.addEventListener('mouseenter', (event) => {this.deleteableEnter(event)});
             link.addEventListener('mouseleave', (event) => {this.deletableLeave(event)});
@@ -267,18 +244,19 @@ ${this.uiBuilder.build(storageData)}
     createUI() {
         this.addUI();
         window.addEventListener('storage', (event) => {
-            if (event.key == this.storage.GDNTStorageName) {
+            if (event.key == this.#storage.GDNTStorageName) {
                 if (document.visibilityState != 'visible') {
-                    this.pageDirty = true;
+                    this.#pageDirty = true;
                 }
                 else {
+                    // Don't update if I was the page that did the change.
                     this.addUI();
                 }
             }
         });
         document.addEventListener('visibilitychange', (event) => {
             if (document.visibilityState == 'visible') {
-                if (this.pageDirty) {
+                if (this.#pageDirty) {
                     this.addUI();
                 }
             }
@@ -286,9 +264,11 @@ ${this.uiBuilder.build(storageData)}
     }
 
     constructor(storage, uiBuilder, page) {
-        this.storage = storage;
-        this.uiBuilder = uiBuilder;
-        this.currentPage = page;
+        this.#storage = storage;
+        this.#uiBuilder = uiBuilder;
+        this.#currentPage = page;
+        this.#mouseOverDeletable = null;
+        this.#pageDirty = false;
     }
 }
 
