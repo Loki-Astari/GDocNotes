@@ -44,7 +44,7 @@ class DataImpl {
     #getOrInsertPage(page)      {if (this.#pages[page] === undefined) {this.#pages[page] = new PageInfo(page);} return this.#pages[page];}
 
     getPage(page)               {return this.#pages[page] !== undefined ? this.#pages[page] : new PageInfo({url:page});}
-    getLabel(label)             {return this.#labels[label] !== undefined ? this.#labels[label].entries() : [].entries();}
+    getLabel(label)             {return this.#labels[label] !== undefined ? this.#labels[label].values() : [].entries();}
 
     get version()               {return this.#version;}
     get labels()                {return Object.keys(this.#labels).values();}
@@ -96,10 +96,7 @@ class DataImpl {
         if (!label) {
             return;
         }
-        const oldPage = this.#pages[page];
-        if (!oldPage) {
-            return;
-        }
+        const oldPage = this.#getOrInsertPage(page);
         const labels = [];
         for (const obj of oldPage.labels) {
             if (obj == label) {
