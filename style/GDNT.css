@@ -10,7 +10,7 @@ a.gdnt-anchor:hover {
     text-decoration:none;
     cursor:pointer;
 }
-.navigation-widget .updating-navigation-item-list .navigation-item-list .last_child_override {
+.outline-refresh.navigation-widget .updating-navigation-item-list .navigation-item-list .navigation-item.last_child_override {
     margin-bottom:  0;
     font-size:      11px;
     line-height:    28px;
@@ -20,4 +20,7 @@ a.gdnt-anchor:hover {
 }
 .navigation-widget .updating-navigation-item-list .navigation-item-list .gdnt-label .navigation-item-level-1 {
     padding-left: 0px;
+}
+.kix-smart-summary-view-content-container.gdnt-compress {
+    padding-bottom: 0px;
 }

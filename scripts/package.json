@@ -12,6 +12,7 @@
     "jest": "^29.5.0"
   },
   "scripts": {
+    "test-one": "jest",
     "test": "jest --no-cache --verbose ./tests"
   },
   "keywords": [],

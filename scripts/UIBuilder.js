@@ -139,7 +139,7 @@ class UIBuilder {
                </div>
            </div>
            <div class="docs-material kix-smart-summary-view" style="padding-bottom:0px">
-               <div id="gdnt-notes-list-of-notes" class="kix-smart-summary-view-content-container" style="display: none;">
+               <div id="gdnt-notes-list-of-notes" class="kix-smart-summary-view-content-container gdnt-compress" style="display: none;">
                    <div class="navigation-widget-header navigation-widget-outline-header" style="padding:0;" role="heading">
                        Existing Notes Documents:
                    </div>
@@ -147,7 +147,7 @@ class UIBuilder {
                    <!-- <div class="kix-smart-summary-view-separator">
                    </div> -->
                </div>
-               <div id="gdnt-labels-list-of-labels" class="kix-smart-summary-view-content-container" style="display: block;">
+               <div id="gdnt-labels-list-of-labels" class="kix-smart-summary-view-content-container gdnt-compress" style="display: block;">
                    <div class="navigation-widget-header navigation-widget-outline-header" style="padding:0;" role="heading">
                        Existing Labels :
                    </div>

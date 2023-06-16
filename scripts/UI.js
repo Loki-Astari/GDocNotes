@@ -7,24 +7,13 @@ class UI {
     #mouseOverDeletable;
     #pageDirty;
 
-    #addNotes(notes) {
+    #addNotes(note) {
         // Can't set a page to be its own Note.
         if (note == this.#currentPage) {
             return null;
         }
-        this.#storage.startSession((session) => {
+        this.#storage.sessionStart((session) => {
             session.setNote(this.#currentPage, note);
-            $.ajax({
-                method: 'HEAD',
-                url: note,
-                async: false,
-                success: function(pageHead) {
-                    const title = Util.cleanTitle($(pageHead).filter('title').text());
-                    if (title) {
-                        session.setDisplay(note, title);
-                    }
-                }
-            });
             return true;
         });
         this.addUI();
@@ -32,7 +21,7 @@ class UI {
 
     // Private
     addLabel(label) {
-        this.#storage.startSession((session) => {
+        this.#storage.sessionStart((session) => {
             session.addLabel(this.#currentPage, label);
             return true;
         });
@@ -42,7 +31,7 @@ class UI {
     // Event Handler
     delPageNoteClick(event, page) {
         const over = this.#mouseOverDeletable;
-        const dirty = this.#storage.startSession((session) => {
+        const dirty = this.#storage.sessionStart((session) => {
             var dirty = false;
             if (over.classList.contains('gdnt-note-page')) {
                 session.setNote(page, '');
@@ -75,7 +64,7 @@ Are you     sure?`);
             }
             // The first element decides if changes should be saved.
             // So only save if it is dirty.
-            // The second element is returned as the result of startSession
+            // The second element is returned as the result of sessionStart
             // So we can use it below to re-build the UI.
             return [dirty, dirty];
         });
@@ -96,8 +85,8 @@ Are you     sure?`);
     }
 
     // Event Handler
-    addNotesClickPageClick(event, notes) {
-        this.#addNotes(notes);
+    addNotesClickPageClick(event, note) {
+        this.#addNotes(note);
     }
 
     // Event Handler
@@ -216,7 +205,7 @@ Are you     sure?`);
         block.innerHTML = this.#uiBuilder.build(storageData, this.#currentPage);
 
         const page = storageData.getPage(this.#currentPage);
-        const hasNote = page.noteURL != '';
+        const hasNote = page.noteUrl != '';
 
         document.getElementById('gdnt-notes-edit').style.display = hasNote ? 'block' : 'none';
         document.getElementById('gdnt-notes-add').style.display = hasNote ? 'none' : 'block';
