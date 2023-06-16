@@ -1,31 +1,6 @@
 class UIBuilder {
 
     constructor() {
-        GM_addStyle ( `
-            div.gdnt-note {
-                color: green;
-            }
-            a.gdnt-anchor {
-                color: inherit;
-                text-decoration: none;
-            }
-            a.gdnt-anchor:hover {
-                color:#0B57D0;
-                text-decoration:none;
-                cursor:pointer;
-            }
-            .navigation-widget .updating-navigation-item-list .navigation-item-list .last_child_override {
-                margin-bottom:  0;
-                font-size:      11px;
-                line-height:    28px;
-            }
-            .navigation-widget .updating-navigation-item-list .navigation-item-list .gdnt-note .navigation-item-level-1 {
-                padding-left: 0px;
-            }
-            .navigation-widget .updating-navigation-item-list .navigation-item-list .gdnt-label .navigation-item-level-1 {
-                padding-left: 0px;
-            }
-        `);
     }
 
     /*
