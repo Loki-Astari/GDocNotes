@@ -11,6 +11,8 @@ Usage:
     ../Notes run-tests
         We don't expect you to use this command.
         This is just here to make sure I remember how to run the tests.
+
+    ../Notes zip
 USAGE
 }
 
@@ -34,6 +36,8 @@ if  [[ $1 == 'create-tests' ]]; then
     # git commit -a -m "Add Unit testing code"
 elif [[ $1 == 'run-tests' ]]; then
     npm test
+elif [[ $1 == 'zip' ]]; then
+    find . | grep -v .git | grep -v node_modules | grep -v docs | grep -v tests | grep -v Notes | grep -v zip | sed -e's/^\.\///' | zip GDocNotes.zip -@
 else
     usage
 fi
