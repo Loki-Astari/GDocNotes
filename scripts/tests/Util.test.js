@@ -5,6 +5,14 @@ beforeAll(async () => {
 });
 
 
+afterAll(() => {
+    jest.restoreAllMocks();
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
 // First Test to show tests are working.
 test('Util: First Test', () => {
     expect(true).toBe(true);

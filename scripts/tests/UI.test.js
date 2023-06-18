@@ -30,6 +30,14 @@ beforeAll(() => {
     }
 });
 
+afterAll(() => {
+    jest.restoreAllMocks();
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
 test('UI: First Test', () => {
     expect(true).toBe(true);
 });

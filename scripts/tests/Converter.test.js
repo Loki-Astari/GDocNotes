@@ -5,6 +5,14 @@ beforeAll(() => {
     global.testData = require('./data/TestData.js');
 });
 
+afterAll(() => {
+    jest.restoreAllMocks();
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
 test('Converter: First Test', () => {
     expect(true).toBe(true);
 });

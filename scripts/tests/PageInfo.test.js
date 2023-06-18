@@ -1,4 +1,17 @@
 
+beforeAll(() => {
+    process.env['NODE_DEV'] = 'TEST';
+    global.PageInfo = require('../PageInfo.js');
+});
+
+afterAll(() => {
+    jest.restoreAllMocks();
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
 test('PageInfo: First Test', () => {
     expect(true).toBe(true);
 });
