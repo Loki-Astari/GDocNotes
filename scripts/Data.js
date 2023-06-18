@@ -36,14 +36,14 @@ class DataImpl {
         this.#pages     = {};
         Object.entries(rawData.pages).forEach(entry => {
             const [key, value] = entry;
-            this.#pages[key] = new PageInfo(value);
+            this.#pages[key] = PageInfo.buildPageInfoFromObject(value);
         });
         this.#labels    = rawData.labels;
         this.#notes     = rawData.notes;
     }
-    #getOrInsertPage(page)      {if (this.#pages[page] === undefined) {this.#pages[page] = new PageInfo(page);} return this.#pages[page];}
+    #getOrInsertPage(page)      {if (this.#pages[page] === undefined) {this.#pages[page] = PageInfo.buildPageInfoFromValue(page);} return this.#pages[page];}
 
-    getPage(page)               {return this.#pages[page] !== undefined ? this.#pages[page] : new PageInfo({url:page});}
+    getPage(page)               {return this.#pages[page] !== undefined ? this.#pages[page] : PageInfo.buildPageInfoFromObject({url:page});}
     getLabel(label)             {return this.#labels[label] !== undefined ? this.#labels[label].values() : [].entries();}
 
     get version()               {return this.#version;}
@@ -65,7 +65,7 @@ class DataImpl {
         if (!oldPage) {
             return;
         }
-        this.#pages[page] = PageInfo.duplicateWithReplace(oldPage, {display: display});
+        this.#pages[page] = PageInfo.buildDuplicateWithReplace(oldPage, {display: display});
     }
     setNote(page, note) {
         const oldPage = this.#getOrInsertPage(page);
@@ -74,22 +74,22 @@ class DataImpl {
             return;
         }
 
-        this.#pages[page] = PageInfo.duplicateWithReplace(oldPage, {noteUrl: note});
+        this.#pages[page] = PageInfo.buildDuplicateWithReplace(oldPage, {noteUrl: note});
 
         if ( oldNote != '') {
             const oldNotePage = this.#pages[oldNote];
             const linkedPages = Array.from(Util.filter(oldNotePage.linkedPages, (obj) => obj != page));
-            this.#pages[oldNote] = PageInfo.duplicateWithReplace(oldNotePage, {linkedPages: linkedPages});
+            this.#pages[oldNote] = PageInfo.buildDuplicateWithReplace(oldNotePage, {linkedPages: linkedPages});
         }
 
         if (note != '') {
             if (!(note in this.#pages)) {
-                this.#pages[note] = new PageInfo(note);
+                this.#pages[note] = PageInfo.buildPageInfoFromValue(note);
             }
             const newNotePage = this.#pages[note];
             const linkedPages = Array.from(newNotePage.linkedPages);
             linkedPages.push(page);
-            this.#pages[note] = PageInfo.duplicateWithReplace(newNotePage, {linkedPages: linkedPages});
+            this.#pages[note] = PageInfo.buildDuplicateWithReplace(newNotePage, {linkedPages: linkedPages});
         }
     }
     addLabel(page, label) {
@@ -106,7 +106,7 @@ class DataImpl {
         }
         labels.push(label);
 
-        this.#pages[page] = PageInfo.duplicateWithReplace(oldPage, {labels: labels});
+        this.#pages[page] = PageInfo.buildDuplicateWithReplace(oldPage, {labels: labels});
         if (this.#labels[label] === undefined) {
             this.#labels[label] = [];
         }
@@ -132,7 +132,7 @@ class DataImpl {
         if (!found) {
             return;
         }
-        this.#pages[page] = PageInfo.duplicateWithReplace(oldPage, {labels: labels});
+        this.#pages[page] = PageInfo.buildDuplicateWithReplace(oldPage, {labels: labels});
         this.#labels[label] = this.#labels[label].filter((obj) => obj != page);
     }
     deleteNote(note) {
@@ -143,9 +143,9 @@ class DataImpl {
         for (const linkedPage of notePage.linkedPages) {
             const linkedPageData = this.#pages[linkedPage];
 
-            this.#pages[linkedPage] = PageInfo.duplicateWithReplace(linkedPageData, {noteUrl: ''});
+            this.#pages[linkedPage] = PageInfo.buildDuplicateWithReplace(linkedPageData, {noteUrl: ''});
         }
-        this.#pages[note] = PageInfo.duplicateWithReplace(notePage, {linkedPages: []});
+        this.#pages[note] = PageInfo.buildDuplicateWithReplace(notePage, {linkedPages: []});
         this.#notes = this.#notes.filter((obj) => obj != note);
     }
     deleteLabel(label) {
@@ -156,7 +156,7 @@ class DataImpl {
         for (const page of labels.values()) {
             const linkedPageData = this.#pages[page];
             const linkedPageLabels = Array.from(Util.filter(linkedPageData.labels, (obj) => obj != label));
-            this.#pages[page] =  PageInfo.duplicateWithReplace(linkedPageData, {labels: linkedPageLabels});
+            this.#pages[page] =  PageInfo.buildDuplicateWithReplace(linkedPageData, {labels: linkedPageLabels});
         }
 
         delete this.#labels[label];
