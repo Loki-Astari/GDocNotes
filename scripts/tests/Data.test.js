@@ -130,7 +130,7 @@ test('Data: Modification: setDisplay', () => {
 test('Data: Modification: setNote', () => {
     data.setNote('One', 'Fifteen');
     expect(data.getPage('One').noteUrl).toBe('Fifteen');
-    expect(Array.from(data.getPage('Two').linkedPages).find((obj) => obj == 'One')).toBeUndefined();
+    expect(data.getPage('Two').linkedPages).not.toContain('One');
     expect(Array.from(data.getPage('Fifteen').linkedPages).find((obj) => obj == 'One')).toBe('One');
 
 });
