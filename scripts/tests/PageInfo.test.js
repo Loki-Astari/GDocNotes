@@ -42,7 +42,7 @@ test('PageInfo: Build Label Display', () => {
 test('PageInfo: Build Object Url', () => {
     const page = PageInfo.buildPageInfoFromObject({url: 'One'});
     expect(page.url).toBe('One');
-    expect(page.display).toBe('');
+    expect(page.display).toBe('One');
     expect(page.noteUrl).toBe('');
     expect(Array.from(page.labels)).toStrictEqual([]);
     expect(Array.from(page.linkedPages)).toStrictEqual([]);
@@ -58,7 +58,7 @@ test('PageInfo: Build Object Url/Display', () => {
 test('PageInfo: Build Object Url/NoteURL', () => {
     const page = PageInfo.buildPageInfoFromObject({url: 'One', noteUrl: 'Two'});
     expect(page.url).toBe('One');
-    expect(page.display).toBe('');
+    expect(page.display).toBe('One');
     expect(page.noteUrl).toBe('Two');
     expect(Array.from(page.labels)).toStrictEqual([]);
     expect(Array.from(page.linkedPages)).toStrictEqual([]);
@@ -66,7 +66,7 @@ test('PageInfo: Build Object Url/NoteURL', () => {
 test('PageInfo: Build Object Url/Labesl', () => {
     const page = PageInfo.buildPageInfoFromObject({url: 'One', labels: ['One', 'Two']});
     expect(page.url).toBe('One');
-    expect(page.display).toBe('');
+    expect(page.display).toBe('One');
     expect(page.noteUrl).toBe('');
     expect(Array.from(page.labels)).toStrictEqual(['One', 'Two']);
     expect(Array.from(page.linkedPages)).toStrictEqual([]);
@@ -74,7 +74,7 @@ test('PageInfo: Build Object Url/Labesl', () => {
 test('PageInfo: Build Object Url/linkedPages', () => {
     const page = PageInfo.buildPageInfoFromObject({url: 'One', linkedPages: ['One', 'Two']});
     expect(page.url).toBe('One');
-    expect(page.display).toBe('');
+    expect(page.display).toBe('One');
     expect(page.noteUrl).toBe('');
     expect(Array.from(page.labels)).toStrictEqual([]);
     expect(Array.from(page.linkedPages)).toStrictEqual(['One', 'Two']);

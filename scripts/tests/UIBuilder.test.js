@@ -220,7 +220,7 @@ test('UIBuilder: buildLabels Empty', () => {
 });
 test('UIBuilder: buildLabels Two Items', () => {
     uiBuilder = new UIBuilder();
-    
+
     const data = new Data({version:2 ,pages: {}, labels: {Red: [], Blue: []}, notes: []});
     const htmlText = uiBuilder.buildLabels(data, "");
     const textNodes = findTextNodes(htmlText);
