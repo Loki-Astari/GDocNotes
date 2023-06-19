@@ -60,19 +60,21 @@ class UIBuilder {
     // See Data.js
     buildLabels(data, page) {
         var output = '';
-        const pageData = data.getPage(page);
-        for (const label of pageData.labels) {
-            const labelInfo = data.getLabel(label);
-            output += `
+        if (page) {
+            const pageData = data.getPage(page);
+            for (const label of pageData.labels) {
+                const labelInfo = data.getLabel(label);
+                output += `
 <div class="navigation-widget-header navigation-widget-outline-header" style="padding-bottom:0px" role="heading">
     Pages Labeled: ${label}
 </div>`;
-                output += this.buildList(labelInfo,
-                                         'gdnt-label-page',
-                                         (page)=>`Open: ${data.getPage(page).display}`,
-                                         (page)=>`Remove '${label}' from Page: ${data.getPage(page).display}`,
-                                         (page)=>`<a class="gdnt-anchor" href="${data.getPage(page).url}">${data.getPage(page).display}</a>`,
-                                         (page)=>`${label}:${data.getPage(page).url}`);
+                    output += this.buildList(labelInfo,
+                                             'gdnt-label-page',
+                                             (page)=>`Open: ${data.getPage(page).display}`,
+                                             (page)=>`Remove '${label}' from Page: ${data.getPage(page).display}`,
+                                             (page)=>`<a class="gdnt-anchor" href="${data.getPage(page).url}">${data.getPage(page).display}</a>`,
+                                             (page)=>`${label}:${data.getPage(page).url}`);
+            }
         }
         if (output == '') {
             output += `

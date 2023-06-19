@@ -5,17 +5,18 @@ beforeAll(async () => {
 });
 
 
+afterAll(() => {
+    jest.restoreAllMocks();
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
+// First Test to show tests are working.
 test('Util: First Test', () => {
     expect(true).toBe(true);
 });
-test('Util: filter', () => {
-    const data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    const values = data.values();
-    const filteredValues = Util.filter(values, (val) => val % 2 == 0);
-    const result = Array.from(filteredValues);
-    expect(result).toStrictEqual([0, 2, 4, 6, 8]);
-});
-
 
 const testData = {
     url: {
@@ -32,6 +33,7 @@ const testData = {
     }
 };
 
+// Clean URL
 test('Util: cleanUrl Normal', () => {
 
     expect(Util.cleanUrl(testData.url.standard)).toBe(testData.url.standard);
@@ -57,7 +59,7 @@ test('Util: cleanUrl Invalid Args & Fragment', () => {
     expect(Util.cleanUrl(testData.url.argsInvfragment)).toBe(testData.url.standard);
 });
 
-
+// Clean Title
 test('Util: cleanTitle Simple', () => {
 
     expect(Util.cleanTitle(testData.title.simple)).toBe(testData.title.simple);
@@ -66,5 +68,15 @@ test('Util: cleanTitle Google', () => {
 
     expect(Util.cleanTitle(testData.title.google)).toBe(testData.title.simple);
 });
+
+// Filter
+test('Util: filter', () => {
+    const data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const values = data.values();
+    const filteredValues = Util.filter(values, (val) => val % 2 == 0);
+    const result = Array.from(filteredValues);
+    expect(result).toStrictEqual([0, 2, 4, 6, 8]);
+});
+
 
 

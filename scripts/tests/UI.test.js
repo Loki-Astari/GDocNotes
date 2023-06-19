@@ -14,20 +14,33 @@ beforeAll(() => {
         setItem: jest.fn().mockImplementation((name, value) => true),
     };
     global.Converter = {
-        convert: jest.fn((x) => JSON.parse(JSON.stringify(testData.v2))),
+        convert: jest.fn((x) => JSON.parse(JSON.stringify(TestData.v2))),
     };
-    global.GM_addStyle = jest.fn();
-    global.window = {
-        addEventListener: jest.fn(),
-        scrollY: 0,
-    };
-    global.getElementById = {
-        createElement:          jest.fn(() => {}),
-        getElementById:         jest.fn(() => {}),
-        getElementsByClassName: jest.fn(() => [{}]),
-        addEventListener:       jest.fn(),
-        visibilityState:        jest.fn(() => 'visible'),
-    }
+    const insertBefore = jest.fn();
+    const getElementsByClassName = jest.fn(() => [createElement()]);
+    const addEventListener = jest.fn();
+    const setAttribute = jest.fn(() =>{});
+    const createElement = jest.fn(() => {
+        return {
+            getElementById:         createElement,
+            insertBefore:           insertBefore,
+            getElementsByClassName: getElementsByClassName,
+            addEventListener:       addEventListener,
+            setAttribute:           setAttribute,
+            style:                  {padding: ''},
+            scrollY:                0,
+        };
+    });
+    global.document = createElement();
+    global.window = createElement();
+});
+
+afterAll(() => {
+    jest.restoreAllMocks();
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
 });
 
 test('UI: First Test', () => {
@@ -39,4 +52,5 @@ test('UI: Create', () => {
     const storage = new Storage(mockStorage);
     const uiBuilder = new UIBuilder();
     const ui = new UI(storage, uiBuilder, 'One');
+    ui.createUI();
 });

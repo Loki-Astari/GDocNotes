@@ -1,7 +1,7 @@
 
 class Converter {
 
-    static #getOrInsertPage(v2, page) {
+    static #getOrInsertV2Page(v2, page) {
         var find = v2.pages[page];
         if (find == null) {
             find = {url: page, display: '', noteUrl: '', labels: [], linkedPages: []};
@@ -31,11 +31,11 @@ class Converter {
          */
         for (const note of v1.notes) {
             // Add all linked pages into v2.pages
-            const v2Page = Converter.#getOrInsertPage(v2, note.note);
+            const v2Page = Converter.#getOrInsertV2Page(v2, note.note);
             v2Page.display = note.display;
             for (const noteLinkedPage of note.linkedPages) {
                 v2Page.linkedPages.push(noteLinkedPage.page);
-                const findLinked = Converter.#getOrInsertPage(v2, noteLinkedPage.page);
+                const findLinked = Converter.#getOrInsertV2Page(v2, noteLinkedPage.page);
                 findLinked.display = findLinked.display || noteLinkedPage.display;
             }
 
@@ -52,7 +52,7 @@ class Converter {
             const linkedPages = [];
             for (const linkedPage of label.linkedPages) {
                 linkedPages.push(linkedPage.page);
-                const findLinked = Converter.#getOrInsertPage(v2, linkedPage.page);
+                const findLinked = Converter.#getOrInsertV2Page(v2, linkedPage.page);
                 findLinked.display = findLinked.display || linkedPage.display;
             }
 
@@ -61,27 +61,42 @@ class Converter {
         }
         return v2;
     }
+
+
+    // Add any new converters here.
     static  #converters = [
         (obj)=>{return obj;},       // Version 0 does not exist.
         Converter.#covertVersion1,  // Version 1 to 2 converter.
     ];
 
+    // Pass an object you want to convert.
     static convert(obj) {
+        // V1 did not have a version tag.
+        // Sloppy I know.
+        // We have an explicit test below to make sure
+        // you can not have a version without a tag now.
         var version = obj.version || 1;
+
+        // Run through the converts converting from the current
+        // version to the latest version.
         for (;version < Converter.#converters.length; ++version) {
             obj = Converter.#converters[version](obj);
         }
+
+        // Make sure we have a version in the object.
         if (obj.version != Converter.#converters.length) {
             throw 'Invalid Conversion'
         }
         return obj;
     }
 
+    // Current latest version we expect
     static expectedVersion()    {
         return Converter.#converters.length;
     }
 }
 
+// Used by the test harness.
 if (typeof process !== 'undefined' && process.env['NODE_DEV'] == 'TEST') {
     module.exports = Converter;
 }

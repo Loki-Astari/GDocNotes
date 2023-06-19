@@ -1,11 +1,14 @@
 
 beforeAll(() => {
     process.env['NODE_DEV'] = 'TEST';
-    global.Data = require('../Data.js');
-    global.Converter = require('../Converter.js');
-    global.PageInfo = require('../PageInfo.js');
-    global.Storage = require('../Storage.js');
     global.TestData = require('./data/TestData.js');
+    global.Converter = {
+        convert: jest.fn((x) => JSON.parse(JSON.stringify(TestData.v2))),
+    };
+    global.Data = require('../Data.js');
+    jest.mock('../Data.js');
+    global.Data.mockImplementation(() => {return {version:2};});
+    global.Storage = require('../Storage.js');
     global.mockStorage = {
         getItem: jest.fn().mockImplementation((name) => {return JSON.stringify(TestData.v2);}),
         setItem: jest.fn().mockImplementation((name, value) => true),
@@ -16,7 +19,9 @@ afterAll(() => {
     jest.restoreAllMocks();
 });
 
+var storage = null;
 beforeEach(() => {
+    storage = new Storage(mockStorage);
     jest.clearAllMocks();
 });
 
@@ -26,14 +31,12 @@ test('Storage: First Test', () => {
 });
 
 test('Storage: Construct', () => {
-    const storage = new Storage(mockStorage);
     expect(storage).not.toBeNull();
     expect(mockStorage.getItem).not.toHaveBeenCalled();
     expect(mockStorage.setItem).not.toHaveBeenCalled();
 });
 
 test('Storage: sessionStart simple return', () => {
-    const storage = new Storage(mockStorage);
     storage.sessionStart((session) => {
         return;
     });
@@ -42,7 +45,6 @@ test('Storage: sessionStart simple return', () => {
     expect(mockStorage.setItem).not.toHaveBeenCalled();
 });
 test('Storage: sessionStart return false', () => {
-    const storage = new Storage(mockStorage);
     storage.sessionStart((session) => {
         return false;
     });
@@ -51,7 +53,6 @@ test('Storage: sessionStart return false', () => {
     expect(mockStorage.setItem).not.toHaveBeenCalled();
 });
 test('Storage: sessionStart return null', () => {
-    const storage = new Storage(mockStorage);
     storage.sessionStart((session) => {
         return null;
     });
@@ -60,7 +61,6 @@ test('Storage: sessionStart return null', () => {
     expect(mockStorage.setItem).not.toHaveBeenCalled();
 });
 test('Storage: sessionStart return undefined', () => {
-    const storage = new Storage(mockStorage);
     storage.sessionStart((session) => {
         var x;
         return x;
@@ -70,7 +70,6 @@ test('Storage: sessionStart return undefined', () => {
     expect(mockStorage.setItem).not.toHaveBeenCalled();
 });
 test('Storage: sessionStart return true', () => {
-    const storage = new Storage(mockStorage);
     storage.sessionStart((session) => {
         return true;
     });
@@ -79,30 +78,29 @@ test('Storage: sessionStart return true', () => {
     expect(mockStorage.setItem).toHaveBeenCalled();
 });
 test('Storage: sessionStart return Array[0] == false', () => {
-    const storage = new Storage(mockStorage);
-    storage.sessionStart((session) => {
-        return [false, 0];
+    const result = storage.sessionStart((session) => {
+        return [false, 15];
     });
 
     expect(mockStorage.getItem).toHaveBeenCalled();
     expect(mockStorage.setItem).not.toHaveBeenCalled();
+    expect(result).toBe(15);
 });
 test('Storage: sessionStart return Array[0] == true', () => {
-    const storage = new Storage(mockStorage);
-    storage.sessionStart((session) => {
-        return [true, 0];
+    const result = storage.sessionStart((session) => {
+        return [true, 22];
     });
 
     expect(mockStorage.getItem).toHaveBeenCalled();
     expect(mockStorage.setItem).toHaveBeenCalled();
+    expect(result).toBe(22);
 });
 test('Storage: sessionStart save value matches output', () => {
-    const storage = new Storage(mockStorage);
     storage.sessionStart((session) => {
         return true;
     });
 
-    expect(mockStorage.setItem.mock.calls[0][1]).toBe(JSON.stringify(TestData.v2));
+    expect(mockStorage.setItem.mock.calls[0][1]).toBe(JSON.stringify({version:2}));
 });
 
 

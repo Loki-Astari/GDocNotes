@@ -12,8 +12,8 @@
     "jest": "^29.5.0"
   },
   "scripts": {
-    "test-one": "jest",
-    "test": "jest --no-cache --verbose ./tests"
+    "test": "jest",
+    "tests": "jest --no-cache --verbose ./tests"
   },
   "keywords": [],
   "author": "",

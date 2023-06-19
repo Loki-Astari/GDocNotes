@@ -9,33 +9,49 @@ beforeAll(() => {
     global.PageInfo = require('../PageInfo.js');
     global.Data = require('../Data.js');
 
+    jest.spyOn(PageInfo, 'buildDuplicateWithReplace');
+    jest.spyOn(PageInfo, 'buildPageInfoFromValue');
+    jest.spyOn(PageInfo, 'buildPageInfoFromObject');
+    PageInfo.buildCount = function() {
+        return PageInfo.buildDuplicateWithReplace.mock.calls.length
+             + PageInfo.buildPageInfoFromValue.mock.calls.length
+             + PageInfo.buildPageInfoFromObject.mock.calls.length
+    }
+});
+
+afterAll(() => {
+    jest.restoreAllMocks();
+});
+
+var data = null;
+beforeEach(() => {
+    // Note the object created is from the mock converter.
+    data = new Data('{"version":2}');
+
+    // Reset all mock functionality
+    jest.clearAllMocks();
 });
 
 test('Data: First Test', () => {
     expect(true).toBe(true);
 });
 
+// Step 1: Validate that the test data is as expected.
+//  Note:       One Note
+//  Labels:     Two Labels
+//  Pages:      Seven Pages
 test('Data V2: Check Notes', () => {
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     const notes = data.notes;
     expect(notes.next()).toEqual({done:false, value: 'Two'});
     expect(notes.next().done).toEqual(true);
 });
 test('Data V2: Check Labels', () => {
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     const labels = data.labels;
     expect(labels.next()).toEqual({done:false, value: 'Red'});
     expect(labels.next()).toEqual({done:false, value: 'MarketPlace'});
     expect(labels.next().done).toEqual(true);
 });
 test('Data V2: Check Page 1', () => {
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     const page1 = data.getPage('One');
     expect(page1).not.toBeNull();
     expect(page1.display).toBe('Company OKR');
@@ -44,9 +60,6 @@ test('Data V2: Check Page 1', () => {
     expect(page1.linkedPages.next().done).toBe(true);
 });
 test('Data V2: Check Page 2', () => {
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     const page2 = data.getPage('Three');
     expect(page2).not.toBeNull();
     expect(page2.display).toBe('Team OKR');
@@ -55,9 +68,6 @@ test('Data V2: Check Page 2', () => {
     expect(page2.linkedPages.next().done).toBe(true);
 });
 test('Data V2: Check Page 3', () => {
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     const page3 = data.getPage('Four');
     expect(page3).not.toBeNull();
     expect(page3.display).toBe('DepartmentOKR');
@@ -66,9 +76,6 @@ test('Data V2: Check Page 3', () => {
     expect(page3.linkedPages.next().done).toBe(true);
 });
 test('Data V2: Check Page 4', () => {
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     const page4 = data.getPage('Five');
     expect(page4).not.toBeNull();
     expect(page4.display).toBe('Personal OKR');
@@ -81,9 +88,6 @@ test('Data V2: Check Page 4', () => {
     expect(page4.linkedPages.next().done).toBe(true);
 });
 test('Data V2: Check Page 5', () => {
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     const page5 = data.getPage('Six');
     expect(page5).not.toBeNull();
     expect(page5.display).toBe('The Quest');
@@ -94,9 +98,6 @@ test('Data V2: Check Page 5', () => {
     expect(page5.linkedPages.next().done).toBe(true);
 });
 test('Data V2: Check Page 6', () => {
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     const page6 = data.getPage('Seven');
     expect(page6).not.toBeNull();
     expect(page6.display).toBe('Market Opertunities');
@@ -107,9 +108,6 @@ test('Data V2: Check Page 6', () => {
     expect(page6.linkedPages.next().done).toBe(true);
 });
 test('Data V2: Check Page 7', () => {
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     const page7 = data.getPage('Two');
     expect(page7).not.toBeNull();
     expect(page7.display).toBe('OKR Notes');
@@ -123,143 +121,105 @@ test('Data V2: Check Page 7', () => {
     expect(page7LinkedPages.next().done).toBe(true);
 });
 
+
+// Step 2: Check functionality
+//
 test('Data: Modification: setDisplay', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.setDisplay('One', 'Fifteen');
     expect(data.getPage('One').display).toBe('Fifteen');
+    expect(PageInfo.buildCount()).toBe(1);
 });
 
 test('Data: Modification: setNote', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.setNote('One', 'Fifteen');
+    // Change One. Fix Two. Add Fifteen
+    expect(PageInfo.buildCount()).toBe(3);
     expect(data.getPage('One').noteUrl).toBe('Fifteen');
-    expect(Array.from(data.getPage('Two').linkedPages).find((obj) => obj == 'One')).toBeUndefined();
-    expect(Array.from(data.getPage('Fifteen').linkedPages).find((obj) => obj == 'One')).toBe('One');
-
+    expect(data.getPage('Two').linkedPages).not.toContain('One');
+    expect(data.getPage('Fifteen').linkedPages).toContain('One');
 });
 
 test('Data: Modification: remPageNote', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.setNote('One', '');
+    // Change One. Fix Two.
+    expect(PageInfo.buildCount()).toBe(2);
     expect(data.getPage('One').noteUrl).toBe('');
-    expect(Array.from(data.getPage('Two').linkedPages).find((obj) => obj == 'One')).toBeUndefined();
+    expect(data.getPage('Two').linkedPages).not.toContain('One');
 });
 
 test('Data: Modification: addPageLabel Existing to Already Done', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
-    expect(Array.from(data.getPage('Six').labels).length).toBe(1);
-    expect(Array.from(data.getLabel('Red')).length).toBe(2);
     data.addLabel('Six', 'Red');
-    expect(Array.from(data.getPage('Six').labels).length).toBe(1);
-    expect(Array.from(data.getLabel('Red')).length).toBe(2);
+    // No change.
+    expect(PageInfo.buildCount()).toBe(0);
 });
 
 test('Data: Modification: addPageLabel Existing to Empty', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
-    expect(Array.from(data.getPage('One').labels).length).toBe(0);
-    expect(Array.from(data.getLabel('Red')).length).toBe(2);
     data.addLabel('One', 'Red');
-    expect(Array.from(data.getPage('One').labels).length).toBe(1);
-    expect(Array.from(data.getLabel('Red')).length).toBe(3);
+    // Change One
+    expect(PageInfo.buildCount()).toBe(1);
+    expect(data.getPage('One').labels).toContain('Red');
+    expect(data.getLabel('Red')).toContain('One');
 });
 
 test('Data: Modification: addPageLabel New to Empty', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.addLabel('Two', 'LeftField');
-    expect(Array.from(data.getPage('Two').labels).length).toBe(1);
-    expect(Array.from(data.getLabel('LeftField')).length).toBe(1);
+    // Change Two
+    expect(PageInfo.buildCount()).toBe(1);
+    expect(data.getPage('Two').labels).toContain('LeftField');
+    expect(data.getLabel('LeftField')).toContain('Two');
 });
 
 test('Data: Modification: addPageLabel New to not empty', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.addLabel('Six', 'LeftField');
-    expect(Array.from(data.getPage('Six').labels).length).toBe(2);
-    expect(Array.from(data.getLabel('LeftField')).length).toBe(1);
+    // Change Six
+    expect(PageInfo.buildCount()).toBe(1);
+    expect(data.getPage('Six').labels).toContain('LeftField');
+    expect(data.getLabel('LeftField')).toContain('Six');
 });
 
 test('Data: Modification: remPageLabel that exists', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.remLabel('Five', 'Red');
-    expect(Array.from(data.getPage('Five').labels).length).toBe(1);
-    expect(Array.from(data.getLabel('Red')).length).toBe(1);
+    // Changes Five
+    expect(PageInfo.buildCount()).toBe(1);
+    expect(data.getPage('Five').labels).not.toContain('Red');
+    expect(data.getLabel('Red')).not.toContain('Five');
 });
 
 test('Data: Modification: remPageLabel that does not exists', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.remLabel('Five', 'LeftField');
-    expect(Array.from(data.getPage('Five').labels).length).toBe(2);
-    expect(Array.from(data.getLabel('LeftField')).length).toBe(0);
+    // No Change
+    expect(PageInfo.buildCount()).toBe(0);
 });
 
 test('Data: Delete Note that does not exit', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.deleteNote('One');
-    expect(Array.from(data.notes).length).toBe(1);
-    expect(data.getPage('Two').noteUrl).toBe('');
+    expect(PageInfo.buildCount()).toBe(0);
 });
 
 test('Data: Delete Note that exits', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.deleteNote('Two');
-    expect(Array.from(data.notes).length).toBe(0);
+    // Fix One, Three, Four, Five
+    // Update Two
+    expect(PageInfo.buildCount()).toBe(5);
+    expect(data.notes).not.toContain('Two');
     expect(data.getPage('One').noteUrl).toBe('');
-    expect(data.getPage('Two').noteUrl).toBe('');
+    expect(data.getPage('Three').noteUrl).toBe('');
+    expect(data.getPage('Four').noteUrl).toBe('');
+    expect(data.getPage('Five').noteUrl).toBe('');
     expect(Array.from(data.getPage('Two').linkedPages).length).toBe(0);
 });
 
 test('Data: Delete Label that does not exit', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.deleteLabel('LeftField');
-    expect(Array.from(data.labels).length).toBe(2);
-    expect(Array.from(data.getPage('One').labels).length).toBe(0);
-    expect(Array.from(data.getPage('Six').labels).length).toBe(1);
-    expect(Array.from(data.getPage('Five').labels).length).toBe(2);
+    // No Change
+    expect(PageInfo.buildCount()).toBe(0);
 });
 
 test('Data: Delete Label that exits', () => {
-
-    // Note the object created is from the mock converter.
-    const data = new Data('{"version":2}');
-
     data.deleteLabel('MarketPlace');
-    expect(Array.from(data.labels).length).toBe(1);
-    expect(Array.from(data.getPage('Five').labels).length).toBe(1);
-    expect(Array.from(data.getPage('Seven').labels).length).toBe(0);
+    expect(PageInfo.buildCount()).toBe(2);
+    expect(data.labels).not.toContain('MarketPlace');
+    expect(data.getPage('Five').labels).not.toContain('MarketPlace');
+    expect(data.getPage('Seven').labels).not.toContain('MarketPlace');
 });
 
