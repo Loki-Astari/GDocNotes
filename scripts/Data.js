@@ -84,12 +84,14 @@ class DataImpl {
 
         if (note != '') {
             if (!(note in this.#pages)) {
-                this.#pages[note] = PageInfo.buildPageInfoFromValue(note);
+                this.#pages[note] = PageInfo.buildPageInfoFromObject({url: note, linkedPages: [page]});
             }
-            const newNotePage = this.#pages[note];
-            const linkedPages = Array.from(newNotePage.linkedPages);
-            linkedPages.push(page);
-            this.#pages[note] = PageInfo.buildDuplicateWithReplace(newNotePage, {linkedPages: linkedPages});
+            else {
+                const newNotePage = this.#pages[note];
+                const linkedPages = Array.from(newNotePage.linkedPages);
+                linkedPages.push(page);
+                this.#pages[note] = PageInfo.buildDuplicateWithReplace(newNotePage, {linkedPages: linkedPages});
+            }
         }
     }
     addLabel(page, label) {
@@ -138,6 +140,9 @@ class DataImpl {
     deleteNote(note) {
         const notePage = this.#pages[note];
         if (!notePage) {
+            return;
+        }
+        if (notePage.linkedPagesLength == 0) {
             return;
         }
         for (const linkedPage of notePage.linkedPages) {

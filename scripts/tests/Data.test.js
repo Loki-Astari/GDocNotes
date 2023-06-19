@@ -12,6 +12,11 @@ beforeAll(() => {
     jest.spyOn(PageInfo, 'buildDuplicateWithReplace');
     jest.spyOn(PageInfo, 'buildPageInfoFromValue');
     jest.spyOn(PageInfo, 'buildPageInfoFromObject');
+    PageInfo.buildCount = function() {
+        return PageInfo.buildDuplicateWithReplace.mock.calls.length
+             + PageInfo.buildPageInfoFromValue.mock.calls.length
+             + PageInfo.buildPageInfoFromObject.mock.calls.length
+    }
 });
 
 afterAll(() => {
@@ -122,91 +127,99 @@ test('Data V2: Check Page 7', () => {
 test('Data: Modification: setDisplay', () => {
     data.setDisplay('One', 'Fifteen');
     expect(data.getPage('One').display).toBe('Fifteen');
-    expect(PageInfo.buildDuplicateWithReplace).toHaveBeenCalledTimes(1);
-    expect(PageInfo.buildPageInfoFromValue).toHaveBeenCalledTimes(0);
-    expect(PageInfo.buildPageInfoFromObject).toHaveBeenCalledTimes(0);
+    expect(PageInfo.buildCount()).toBe(1);
 });
 
 test('Data: Modification: setNote', () => {
     data.setNote('One', 'Fifteen');
+    // Change One. Fix Two. Add Fifteen
+    expect(PageInfo.buildCount()).toBe(3);
     expect(data.getPage('One').noteUrl).toBe('Fifteen');
     expect(data.getPage('Two').linkedPages).not.toContain('One');
-    expect(Array.from(data.getPage('Fifteen').linkedPages).find((obj) => obj == 'One')).toBe('One');
-
+    expect(data.getPage('Fifteen').linkedPages).toContain('One');
 });
 
 test('Data: Modification: remPageNote', () => {
     data.setNote('One', '');
+    // Change One. Fix Two.
+    expect(PageInfo.buildCount()).toBe(2);
     expect(data.getPage('One').noteUrl).toBe('');
-    expect(Array.from(data.getPage('Two').linkedPages).find((obj) => obj == 'One')).toBeUndefined();
+    expect(data.getPage('Two').linkedPages).not.toContain('One');
 });
 
 test('Data: Modification: addPageLabel Existing to Already Done', () => {
-    expect(Array.from(data.getPage('Six').labels).length).toBe(1);
-    expect(Array.from(data.getLabel('Red')).length).toBe(2);
     data.addLabel('Six', 'Red');
-    expect(Array.from(data.getPage('Six').labels).length).toBe(1);
-    expect(Array.from(data.getLabel('Red')).length).toBe(2);
+    // No change.
+    expect(PageInfo.buildCount()).toBe(0);
 });
 
 test('Data: Modification: addPageLabel Existing to Empty', () => {
-    expect(Array.from(data.getPage('One').labels).length).toBe(0);
-    expect(Array.from(data.getLabel('Red')).length).toBe(2);
     data.addLabel('One', 'Red');
-    expect(Array.from(data.getPage('One').labels).length).toBe(1);
-    expect(Array.from(data.getLabel('Red')).length).toBe(3);
+    // Change One
+    expect(PageInfo.buildCount()).toBe(1);
+    expect(data.getPage('One').labels).toContain('Red');
+    expect(data.getLabel('Red')).toContain('One');
 });
 
 test('Data: Modification: addPageLabel New to Empty', () => {
     data.addLabel('Two', 'LeftField');
-    expect(Array.from(data.getPage('Two').labels).length).toBe(1);
-    expect(Array.from(data.getLabel('LeftField')).length).toBe(1);
+    // Change Two
+    expect(PageInfo.buildCount()).toBe(1);
+    expect(data.getPage('Two').labels).toContain('LeftField');
+    expect(data.getLabel('LeftField')).toContain('Two');
 });
 
 test('Data: Modification: addPageLabel New to not empty', () => {
     data.addLabel('Six', 'LeftField');
-    expect(Array.from(data.getPage('Six').labels).length).toBe(2);
-    expect(Array.from(data.getLabel('LeftField')).length).toBe(1);
+    // Change Six
+    expect(PageInfo.buildCount()).toBe(1);
+    expect(data.getPage('Six').labels).toContain('LeftField');
+    expect(data.getLabel('LeftField')).toContain('Six');
 });
 
 test('Data: Modification: remPageLabel that exists', () => {
     data.remLabel('Five', 'Red');
-    expect(Array.from(data.getPage('Five').labels).length).toBe(1);
-    expect(Array.from(data.getLabel('Red')).length).toBe(1);
+    // Changes Five
+    expect(PageInfo.buildCount()).toBe(1);
+    expect(data.getPage('Five').labels).not.toContain('Red');
+    expect(data.getLabel('Red')).not.toContain('Five');
 });
 
 test('Data: Modification: remPageLabel that does not exists', () => {
     data.remLabel('Five', 'LeftField');
-    expect(Array.from(data.getPage('Five').labels).length).toBe(2);
-    expect(Array.from(data.getLabel('LeftField')).length).toBe(0);
+    // No Change
+    expect(PageInfo.buildCount()).toBe(0);
 });
 
 test('Data: Delete Note that does not exit', () => {
     data.deleteNote('One');
-    expect(Array.from(data.notes).length).toBe(1);
-    expect(data.getPage('Two').noteUrl).toBe('');
+    expect(PageInfo.buildCount()).toBe(0);
 });
 
 test('Data: Delete Note that exits', () => {
     data.deleteNote('Two');
-    expect(Array.from(data.notes).length).toBe(0);
+    // Fix One, Three, Four, Five
+    // Update Two
+    expect(PageInfo.buildCount()).toBe(5);
+    expect(data.notes).not.toContain('Two');
     expect(data.getPage('One').noteUrl).toBe('');
-    expect(data.getPage('Two').noteUrl).toBe('');
+    expect(data.getPage('Three').noteUrl).toBe('');
+    expect(data.getPage('Four').noteUrl).toBe('');
+    expect(data.getPage('Five').noteUrl).toBe('');
     expect(Array.from(data.getPage('Two').linkedPages).length).toBe(0);
 });
 
 test('Data: Delete Label that does not exit', () => {
     data.deleteLabel('LeftField');
-    expect(Array.from(data.labels).length).toBe(2);
-    expect(Array.from(data.getPage('One').labels).length).toBe(0);
-    expect(Array.from(data.getPage('Six').labels).length).toBe(1);
-    expect(Array.from(data.getPage('Five').labels).length).toBe(2);
+    // No Change
+    expect(PageInfo.buildCount()).toBe(0);
 });
 
 test('Data: Delete Label that exits', () => {
     data.deleteLabel('MarketPlace');
-    expect(Array.from(data.labels).length).toBe(1);
-    expect(Array.from(data.getPage('Five').labels).length).toBe(1);
-    expect(Array.from(data.getPage('Seven').labels).length).toBe(0);
+    expect(PageInfo.buildCount()).toBe(2);
+    expect(data.labels).not.toContain('MarketPlace');
+    expect(data.getPage('Five').labels).not.toContain('MarketPlace');
+    expect(data.getPage('Seven').labels).not.toContain('MarketPlace');
 });
 

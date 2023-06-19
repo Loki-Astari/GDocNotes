@@ -5,11 +5,20 @@ class PageInfo {
     #labels;
     #linkedPages;
 
-    get url()           {return this.#url;}
-    get display()       {return this.#display;}
-    get noteUrl()       {return this.#noteUrl;}
-    get labels()        {return this.#labels.values();}
-    get linkedPages()   {return this.#linkedPages.values();}
+    static #toArray(val) {
+        const result = (val && typeof val[Symbol.iterator] === 'function') ? Array.from(val) : val;
+        return result;
+    }
+    static #useReplacementIfDefined(value, replace) {
+        return replace !== undefined ? replace : value;
+    }
+
+    get url()               {return this.#url;}
+    get display()           {return this.#display;}
+    get noteUrl()           {return this.#noteUrl;}
+    get labels()            {return this.#labels.values();}
+    get linkedPages()       {return this.#linkedPages.values();}
+    get linkedPagesLength() {return this.#linkedPages.length;}
 
     // If there is no data stored in a page.
     // Then we can use this to filter it from the stored data.
@@ -20,15 +29,10 @@ class PageInfo {
         return {url:this.#url, display:this.#display, noteUrl:this.#noteUrl, labels:this.#labels, linkedPages:this.#linkedPages};
     }
 
-    constructor(url, display = '', noteUrl = '', labels = [], linkedPages = []) {
-        this.#url           = url;
-        this.#display       = display;
-        this.#noteUrl       = noteUrl;
-        this.#labels        = labels;
-        this.#linkedPages   = linkedPages;
-    }
-
-    static buildPageInfoFromValue(url, display) {
+    constructor(url, display, noteUrl, labels, linkedPages) {
+        if (!url) {
+            throw 'Invalid Page Name';
+        }
         if (!display) {
 
             // If no display value is provided then we should try and create a default value.
@@ -51,16 +55,18 @@ class PageInfo {
             // If we still have nothing then lets default to url
             display = display || url;
         }
-        return new PageInfo(url, display);
-    }
-    static #toArray(val) {
-        const result = (val && typeof val[Symbol.iterator] === 'function') ? Array.from(val) : val;
-        return result;
-    }
-    static #useReplacementIfDefined(value, replace) {
-        return replace !== undefined ? replace : value;
+        this.#url           = url;
+        this.#display       = display;
+        this.#noteUrl       = noteUrl       || '';
+        this.#labels        = labels        || [];
+        this.#linkedPages   = linkedPages   || [];
     }
 
+    static buildPageInfoFromValue(url, display, noteUrl, labels, linkedPages) {
+        labels        = PageInfo.#toArray(labels);
+        linkedPages   = PageInfo.#toArray(linkedPages);
+        return new PageInfo(url, display, noteUrl, labels, linkedPages);
+    }
     static buildPageInfoFromObject(value) {
         const labels        = PageInfo.#toArray(value.labels);
         const linkedPages   = PageInfo.#toArray(value.linkedPages);
