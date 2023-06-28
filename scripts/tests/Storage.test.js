@@ -36,6 +36,29 @@ test('Storage: Construct', () => {
     expect(mockStorage.setItem).not.toHaveBeenCalled();
 });
 
+test('Storage: First Time zero info in Local storage', () => {
+    const localMock = {
+        getItem: (item) => {return null;},
+        setItem: (item, value) => {},
+    };
+    const storage = new Storage(localMock);
+    const session = storage.sessionStart((session) => {
+        return [true, session];
+    });
+    expect(session).not.toBeNull();
+});
+test('Storage: First Time Bad Data in local storage', () => {
+    const localMock = {
+        getItem: (item) => {return '12,13,"Link"';},
+        setItem: (item, value) => {},
+    };
+    const localStorage = new Storage(localMock);
+    const session = localStorage.sessionStart((session) => {
+        return [true, session];
+    });
+    expect(session).not.toBeNull();
+});
+
 test('Storage: sessionStart simple return', () => {
     storage.sessionStart((session) => {
         return;

@@ -19,6 +19,17 @@ class Storage {
     #setGDNTData(session) {
         this.#storageArea.setItem(this.#GDNTStorageName, JSON.stringify(session));
     }
+    #parseJsonOrDefault(sessionText) {
+        var inputObject;
+        try {
+            inputObject = JSON.parse(sessionText);
+        }
+        catch (e) {
+            inputObject = {};
+        }
+        return inputObject;
+    }
+
 
     constructor(storageArea = localStorage) {
         this.#storageArea =  storageArea;
@@ -33,8 +44,8 @@ class Storage {
             // TODO:
         }
         this.#seaasionInUse = true;
-        const sessionText = this.#getGDNTData();
-        const inputObject = JSON.parse(sessionText);
+        const sessionText = this.#getGDNTData() || '{"version":2,"pages":{},"labels":{},"notes":[]}';
+        const inputObject = this.#parseJsonOrDefault(sessionText);
         const inputVersion = inputObject.version || 1;
         const session = new Data(inputObject);
         const result = action(session);
