@@ -44,7 +44,7 @@ class Storage {
             // TODO:
         }
         this.#seaasionInUse = true;
-        const sessionText = this.#getGDNTData() || '{}';
+        const sessionText = this.#getGDNTData() || '{"version":2,"pages":{},"labels":{},"notes":[]}';
         const inputObject = this.#parseJsonOrDefault(sessionText);
         const inputVersion = inputObject.version || 1;
         const session = new Data(inputObject);

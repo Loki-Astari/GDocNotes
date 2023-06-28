@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "GDoc Notes",
     "description": "Add a section to the left bar of google document that allows you to add notes and labels.",
-    "version": "1.2",
+    "version": "1.1",
     "action": {
         "default_icon": "images/GDNT.256.png"
     },
